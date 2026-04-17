@@ -1,0 +1,17 @@
+{
+  "name": "LoveOS — 家庭联机生活系统",
+  "short_name": "LoveOS",
+  "description": "夫妻生活协调 OA 系统",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fff1f2",
+  "theme_color": "#f43f5e",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    }
+  ]
+}
