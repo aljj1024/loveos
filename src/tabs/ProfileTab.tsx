@@ -1,28 +1,41 @@
 import { useState } from 'react';
 import { ChevronRight } from 'lucide-react';
 import GlobalHeader from '../components/GlobalHeader';
-import { useAppState, useAppDispatch, useToast } from '../context/AppContext';
+import { useAppState, useAppDispatch, useToast, useCurrentMood } from '../context/AppContext';
 import { useMoodTimer } from '../hooks/useMoodTimer';
 import { DEFAULT_MOODS } from '../constants';
 
 export default function ProfileTab() {
-  const { mood, points } = useAppState();
+  const { points, currentUser, wikiProfiles } = useAppState();
   const dispatch = useAppDispatch();
   const showToast = useToast();
+  const currentMood = useCurrentMood();
   const moodCountdown = useMoodTimer();
   const [truceResult, setTruceResult] = useState<string | null>(null);
   const [isSpinning, setIsSpinning] = useState(false);
 
+  const wifeProfile = wikiProfiles.find(p => p.id === 'wife');
+  const husbandProfile = wikiProfiles.find(p => p.id === 'husband');
+  const partnerName = currentUser === 'wife' ? (husbandProfile?.displayName ?? '老公') : (wifeProfile?.displayName ?? '老婆');
+
+  const availableMoods = currentUser === 'husband'
+    ? DEFAULT_MOODS.filter(m => m.id !== 'period')
+    : DEFAULT_MOODS;
+
   function handleMoodSelect(m: typeof DEFAULT_MOODS[0]) {
     dispatch({ type: 'SET_MOOD', mood: m });
-    showToast(`${m.icon} 状态已更新！已同步给老婆`);
+    showToast(`${m.icon} 状态已更新！已同步给${partnerName}`);
   }
 
   function handleTruce() {
     setIsSpinning(true);
     setTruceResult(null);
     setTimeout(() => {
-      const who = Math.random() > 0.5 ? '老公先道歉 🙇‍♂️' : '老婆先道歉 🙇‍♀️';
+      const wifeName = wifeProfile?.displayName ?? '老婆';
+      const husbandName = husbandProfile?.displayName ?? '老公';
+      const who = Math.random() > 0.5
+        ? `${husbandName}先道歉 🙇‍♂️`
+        : `${wifeName}先道歉 🙇‍♀️`;
       setTruceResult(who);
       setIsSpinning(false);
       showToast(`裁判结果：${who}`);
@@ -43,12 +56,12 @@ export default function ProfileTab() {
           <div className="bg-white p-5 rounded-3xl border-2 border-gray-100 shadow-sm">
             <p className="text-xs text-gray-400 font-bold mb-4">点击切换当前状态，对方会立即看到哦：</p>
             <div className="grid grid-cols-2 gap-3">
-              {DEFAULT_MOODS.map(m => (
+              {availableMoods.map(m => (
                 <button
                   key={m.id}
                   onClick={() => handleMoodSelect(m)}
                   className={`p-3 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 border-2 transition-all active:scale-95 ${
-                    mood.current.id === m.id
+                    currentMood.current.id === m.id
                       ? `${m.colorClass} text-white border-transparent shadow-md`
                       : 'bg-gray-50 border-gray-100 text-gray-600'
                   }`}
@@ -83,7 +96,7 @@ export default function ProfileTab() {
 
         {/* 积分 & 数据 */}
         <div className="bg-white rounded-3xl p-5 border-2 border-gray-100 shadow-sm">
-          <h3 className="font-extrabold text-gray-800 mb-3">💰 我的积分档案</h3>
+          <h3 className="font-extrabold text-gray-800 mb-3">💰 家庭金库</h3>
           <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl p-4 border-2 border-yellow-100 mb-3">
             <div className="text-3xl font-black text-yellow-600 text-center">{points}</div>
             <div className="text-xs text-yellow-500 font-bold text-center mt-1">当前余额（金库）</div>

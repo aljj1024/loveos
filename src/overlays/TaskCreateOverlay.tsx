@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { XCircle } from 'lucide-react';
-import { useAppDispatch, useToast } from '../context/AppContext';
+import { useAppDispatch, useAppState, useToast } from '../context/AppContext';
 import { TASK_ICONS } from '../constants';
 import type { Task } from '../types';
 
 export default function TaskCreateOverlay() {
   const dispatch = useAppDispatch();
+  const { currentUser } = useAppState();
   const showToast = useToast();
   const [title, setTitle] = useState('');
   const [icon, setIcon] = useState('🧹');
@@ -18,7 +19,7 @@ export default function TaskCreateOverlay() {
       title,
       icon,
       reward,
-      createdBy: 'wife',
+      createdBy: currentUser ?? 'wife',
       status: 'open',
       createdAt: new Date().toISOString(),
     };

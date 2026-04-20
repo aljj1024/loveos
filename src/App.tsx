@@ -1,4 +1,5 @@
 import { AppProvider, useAppState } from './context/AppContext';
+import LoginScreen from './components/LoginScreen';
 import BottomNav from './components/BottomNav';
 import Toast from './components/Toast';
 import HomeTab from './tabs/HomeTab';
@@ -45,10 +46,16 @@ function PhoneShell() {
   );
 }
 
+function AppInner() {
+  const { currentUser } = useAppState();
+  if (!currentUser) return <LoginScreen />;
+  return <PhoneShell />;
+}
+
 export default function App() {
   return (
     <AppProvider>
-      <PhoneShell />
+      <AppInner />
     </AppProvider>
   );
 }

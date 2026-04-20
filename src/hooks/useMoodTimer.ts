@@ -1,16 +1,16 @@
 import { useEffect, useState } from 'react';
-import { useAppState, useAppDispatch } from '../context/AppContext';
+import { useAppDispatch, useCurrentMood } from '../context/AppContext';
 
 const MOOD_DURATION_MS = 24 * 60 * 60 * 1000;
 
 export function useMoodTimer() {
-  const { mood } = useAppState();
+  const currentMood = useCurrentMood();
   const dispatch = useAppDispatch();
   const [remaining, setRemaining] = useState('');
 
   useEffect(() => {
     function tick() {
-      const elapsed = Date.now() - Date.parse(mood.setAt);
+      const elapsed = Date.now() - Date.parse(currentMood.setAt);
       const left = MOOD_DURATION_MS - elapsed;
       if (left <= 0) {
         dispatch({ type: 'RESET_MOOD' });
@@ -24,7 +24,7 @@ export function useMoodTimer() {
     tick();
     const id = setInterval(tick, 60000);
     return () => clearInterval(id);
-  }, [mood.setAt, dispatch]);
+  }, [currentMood.setAt, dispatch]);
 
   return remaining;
 }

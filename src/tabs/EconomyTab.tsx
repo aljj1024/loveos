@@ -5,13 +5,17 @@ import { useAppState, useAppDispatch, useToast } from '../context/AppContext';
 import type { Voucher } from '../types';
 
 export default function EconomyTab() {
-  const { tasks, storeItems, vouchers, points } = useAppState();
+  const { tasks, storeItems, vouchers, points, currentUser } = useAppState();
   const dispatch = useAppDispatch();
   const showToast = useToast();
   const [ecoMode, setEcoMode] = useState<'tasks' | 'store'>('tasks');
 
-  const openTasks = tasks.filter(t => t.status === 'open');
-  const myTasks = tasks.filter(t => ['accepted', 'pending_verify'].includes(t.status));
+  // Tasks I accepted and am working on
+  const myActiveTasks = tasks.filter(t => t.acceptedBy === currentUser && t.status === 'accepted');
+  // Tasks I created that are waiting for verification by me
+  const pendingVerifyByMe = tasks.filter(t => t.createdBy === currentUser && t.status === 'pending_verify');
+  // Open tasks created by OTHERS (I can accept)
+  const openTasks = tasks.filter(t => t.status === 'open' && t.createdBy !== currentUser);
   const doneTasks = tasks.filter(t => t.status === 'verified').slice(0, 3);
 
   function handleAccept(taskId: string, reward: number, title: string) {
@@ -81,7 +85,7 @@ export default function EconomyTab() {
 
   return (
     <div className="flex-1 overflow-y-auto bg-slate-50 pb-24 animate-fade-in">
-      <GlobalHeader title="家庭央行" subtitle="多做家务多赚钱，老婆开心每一天 💰" />
+      <GlobalHeader title="家庭央行" subtitle={currentUser === 'wife' ? '发布任务，让老公多做贡献 💪' : '多接任务多赚钱，积分换特权 💰'} />
 
       {/* Toggle */}
       <div className="px-6 py-4">
@@ -111,14 +115,14 @@ export default function EconomyTab() {
             <PlusCircle size={18} /> 发布新任务
           </button>
 
-          {/* My active tasks */}
-          {myTasks.length > 0 && (
+          {/* Tasks I'm doing */}
+          {myActiveTasks.length > 0 && (
             <div>
               <h3 className="font-extrabold text-gray-600 text-sm mb-2 flex items-center gap-1.5">
                 <Clock size={14} className="text-blue-400" /> 我的任务
               </h3>
               <div className="space-y-3">
-                {myTasks.map(task => (
+                {myActiveTasks.map(task => (
                   <div key={task.id} className="bg-blue-50 p-4 rounded-3xl border-2 border-blue-100 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="text-3xl">{task.icon}</div>
@@ -129,7 +133,32 @@ export default function EconomyTab() {
                         </div>
                       </div>
                     </div>
-                    {statusActions[task.status as 'accepted' | 'pending_verify']?.(task)}
+                    {statusActions.accepted(task)}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Tasks I created, pending my verification */}
+          {pendingVerifyByMe.length > 0 && (
+            <div>
+              <h3 className="font-extrabold text-gray-600 text-sm mb-2 flex items-center gap-1.5">
+                <CheckCircle2 size={14} className="text-orange-400" /> 待我验收
+              </h3>
+              <div className="space-y-3">
+                {pendingVerifyByMe.map(task => (
+                  <div key={task.id} className="bg-orange-50 p-4 rounded-3xl border-2 border-orange-100 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="text-3xl">{task.icon}</div>
+                      <div>
+                        <div className="font-extrabold text-gray-800 text-sm">{task.title}</div>
+                        <div className="text-xs text-yellow-600 font-bold mt-1 flex items-center gap-1">
+                          <Coins size={12} /> +{task.reward} 积分
+                        </div>
+                      </div>
+                    </div>
+                    {statusActions.pending_verify(task)}
                   </div>
                 ))}
               </div>
@@ -164,7 +193,7 @@ export default function EconomyTab() {
             </div>
           )}
 
-          {openTasks.length === 0 && myTasks.length === 0 && (
+          {openTasks.length === 0 && myActiveTasks.length === 0 && pendingVerifyByMe.length === 0 && (
             <div className="bg-white rounded-3xl p-8 text-center border-2 border-gray-100">
               <div className="text-4xl mb-3">🎊</div>
               <p className="text-gray-400 font-bold text-sm">所有任务都完成啦！</p>

@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { XCircle } from 'lucide-react';
 import { useAppState, useAppDispatch, useToast } from '../context/AppContext';
+
 import type { Task } from '../types';
 
 export default function ConditionalOverlay() {
-  const { approvals, overlayPayload } = useAppState();
+  const { approvals, overlayPayload, currentUser } = useAppState();
   const dispatch = useAppDispatch();
   const showToast = useToast();
   const [condition, setCondition] = useState('');
@@ -22,7 +23,7 @@ export default function ConditionalOverlay() {
       title: condition,
       icon: '📋',
       reward: 0,
-      createdBy: 'wife',
+      createdBy: currentUser ?? 'wife',
       status: 'open',
       createdAt: new Date().toISOString(),
       sourceApprovalId: approvalId,

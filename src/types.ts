@@ -1,3 +1,7 @@
+// ─── User / Auth ──────────────────────────────────────────
+
+export type UserRole = 'wife' | 'husband';
+
 // ─── Approval / OA ───────────────────────────────────────
 
 export type ApprovalStatus = 'pending' | 'approved' | 'rejected' | 'conditional';
@@ -11,6 +15,7 @@ export interface Approval {
   datetime: string;
   sincerity: string;
   submittedAt: string;
+  submittedBy?: UserRole;
   status: ApprovalStatus;
   resolvedAt?: string;
   conditionText?: string;
@@ -100,7 +105,8 @@ export interface WishlistItem {
   emoji: string;
   notes?: string;
   addedAt: string;
-  claimedBy?: 'husband' | 'wife';
+  addedBy?: UserRole;
+  claimedBy?: UserRole;
   claimedAt?: string;
 }
 

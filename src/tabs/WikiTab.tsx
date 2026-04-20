@@ -1,15 +1,15 @@
 import { useState } from 'react';
-import { Gift, PlusCircle, Pencil } from 'lucide-react';
+import { Gift, PlusCircle, Pencil, Lock } from 'lucide-react';
 import GlobalHeader from '../components/GlobalHeader';
 import { useAppState, useAppDispatch, useToast } from '../context/AppContext';
 import type { WishlistItem } from '../types';
 
 export default function WikiTab() {
-  const { wikiProfiles, wishlist } = useAppState();
+  const { wikiProfiles, wishlist, currentUser } = useAppState();
   const dispatch = useAppDispatch();
   const showToast = useToast();
 
-  const [activeProfileId, setActiveProfileId] = useState<'wife' | 'husband'>('wife');
+  const [activeProfileId, setActiveProfileId] = useState<'wife' | 'husband'>(currentUser ?? 'wife');
   const [addingWish, setAddingWish] = useState(false);
   const [wishName, setWishName] = useState('');
   const [wishEmoji, setWishEmoji] = useState('🎁');
@@ -18,6 +18,7 @@ export default function WikiTab() {
   const wifeProfile = wikiProfiles.find(p => p.id === 'wife');
   const husbandProfile = wikiProfiles.find(p => p.id === 'husband');
   const activeProfile = activeProfileId === 'wife' ? wifeProfile : husbandProfile;
+  const canEditProfile = activeProfileId === currentUser;
 
   function handleAddWish() {
     if (!wishName.trim()) return;
@@ -37,11 +38,16 @@ export default function WikiTab() {
   }
 
   function handleClaim(id: string) {
-    dispatch({ type: 'CLAIM_WISHLIST_ITEM', id, claimedBy: 'husband' });
-    showToast('🎉 已认领！准备给老婆一个惊喜吧');
+    dispatch({ type: 'CLAIM_WISHLIST_ITEM', id, claimedBy: currentUser ?? 'husband' });
+    showToast('🎉 已认领！准备给TA一个惊喜吧');
   }
 
   const WISH_EMOJIS = ['🎁', '👜', '💄', '👟', '📱', '💍', '✈️', '🕯️', '🌸', '🍰'];
+
+  // Wishlist: wife's items are the "gift pool" for husband to claim
+  // Wife can add/remove, husband can only claim
+  const isWife = currentUser === 'wife';
+  const wishlistTitle = isWife ? '我的许愿池' : '她的许愿池';
 
   return (
     <div className="flex-1 overflow-y-auto bg-orange-50/30 pb-24 animate-fade-in">
@@ -51,9 +57,9 @@ export default function WikiTab() {
         {/* Profile switcher */}
         <div className="flex bg-white rounded-2xl p-1 shadow-sm border border-gray-100">
           {([
-            { id: 'wife', profile: wifeProfile, accent: 'pink' },
-            { id: 'husband', profile: husbandProfile, accent: 'blue' },
-          ] as const).map(({ id, profile }) => (
+            { id: 'wife' as const, profile: wifeProfile },
+            { id: 'husband' as const, profile: husbandProfile },
+          ]).map(({ id, profile }) => (
             <button
               key={id}
               onClick={() => setActiveProfileId(id)}
@@ -66,7 +72,7 @@ export default function WikiTab() {
               }`}
             >
               <span className="text-base">{profile?.avatar}</span>
-              <span>{profile?.displayName}</span>
+              <span>{id === currentUser ? '我的档案' : 'TA的档案'}</span>
             </button>
           ))}
         </div>
@@ -85,20 +91,29 @@ export default function WikiTab() {
               <div className="text-4xl">{activeProfile.avatar}</div>
               <div>
                 <h3 className="font-black text-gray-800">基础档案</h3>
-                <p className="text-xs text-gray-400">点击字段可编辑</p>
+                <p className="text-xs text-gray-400">
+                  {canEditProfile ? '点击字段可编辑' : '仅供查阅，不可编辑'}
+                </p>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3 text-sm">
               {activeProfile.fields.map(field => (
                 <button
                   key={field.key}
-                  onClick={() => dispatch({ type: 'OPEN_OVERLAY', overlay: 'wikiEdit', payload: { profileId: activeProfileId, fieldKey: field.key } })}
-                  className={`text-left p-3 rounded-2xl active:scale-95 transition-transform group ${field.colSpan === 2 ? 'col-span-2' : ''} ${field.highlight ? 'bg-rose-50 border border-rose-100' : 'bg-gray-50'}`}
+                  onClick={() => {
+                    if (!canEditProfile) return;
+                    dispatch({ type: 'OPEN_OVERLAY', overlay: 'wikiEdit', payload: { profileId: activeProfileId, fieldKey: field.key } });
+                  }}
+                  disabled={!canEditProfile}
+                  className={`text-left p-3 rounded-2xl transition-transform group ${field.colSpan === 2 ? 'col-span-2' : ''} ${field.highlight ? 'bg-rose-50 border border-rose-100' : 'bg-gray-50'} ${canEditProfile ? 'active:scale-95 cursor-pointer' : 'cursor-default opacity-90'}`}
                 >
                   <span className={`text-xs block mb-1 ${field.highlight ? 'text-rose-400' : 'text-gray-400'}`}>{field.label}</span>
                   <div className="flex items-center justify-between gap-2">
                     <span className={`font-bold text-sm ${field.highlight ? 'text-rose-800' : 'text-gray-700'}`}>{field.value}</span>
-                    <Pencil size={12} className="text-gray-300 group-hover:text-gray-400 flex-shrink-0" />
+                    {canEditProfile
+                      ? <Pencil size={12} className="text-gray-300 group-hover:text-gray-400 flex-shrink-0" />
+                      : <Lock size={11} className="text-gray-200 flex-shrink-0" />
+                    }
                   </div>
                 </button>
               ))}
@@ -110,18 +125,20 @@ export default function WikiTab() {
         <div>
           <div className="flex items-center justify-between mb-4 px-1">
             <h2 className="text-gray-800 font-extrabold flex items-center gap-2">
-              <Gift size={20} className="text-rose-500" /> 她的许愿池
+              <Gift size={20} className="text-rose-500" /> {wishlistTitle}
             </h2>
-            <button
-              onClick={() => setAddingWish(!addingWish)}
-              className="text-xs font-bold text-rose-400 flex items-center gap-1 active:scale-95 transition-transform"
-            >
-              <PlusCircle size={14} /> 添加心愿
-            </button>
+            {isWife && (
+              <button
+                onClick={() => setAddingWish(!addingWish)}
+                className="text-xs font-bold text-rose-400 flex items-center gap-1 active:scale-95 transition-transform"
+              >
+                <PlusCircle size={14} /> 添加心愿
+              </button>
+            )}
           </div>
 
-          {/* Add wish form */}
-          {addingWish && (
+          {/* Add wish form (wife only) */}
+          {isWife && addingWish && (
             <div className="bg-rose-50 rounded-2xl p-4 mb-4 border-2 border-rose-200 animate-fade-in">
               <div className="flex gap-2 mb-3 flex-wrap">
                 {WISH_EMOJIS.map(e => (
@@ -167,7 +184,7 @@ export default function WikiTab() {
             <div className="bg-white rounded-2xl p-8 text-center border-2 border-gray-100">
               <div className="text-4xl mb-2">🌱</div>
               <p className="text-gray-400 text-sm font-bold">许愿池是空的</p>
-              <p className="text-gray-300 text-xs mt-1">添加第一个心愿吧</p>
+              <p className="text-gray-300 text-xs mt-1">{isWife ? '添加第一个心愿吧' : '等老婆添加心愿吧'}</p>
             </div>
           )}
 
@@ -190,7 +207,8 @@ export default function WikiTab() {
                   </div>
                 </div>
                 <div className="flex flex-col gap-1.5 items-end">
-                  {!item.claimedBy && (
+                  {/* Husband claims; wife removes */}
+                  {!isWife && !item.claimedBy && (
                     <button
                       onClick={() => handleClaim(item.id)}
                       className="bg-gray-900 text-white px-3 py-1.5 rounded-lg text-xs font-bold active:scale-95 transition-transform"
@@ -198,15 +216,17 @@ export default function WikiTab() {
                       我来清空
                     </button>
                   )}
-                  <button
-                    onClick={() => {
-                      dispatch({ type: 'REMOVE_WISHLIST_ITEM', id: item.id });
-                      showToast('已从许愿池移除');
-                    }}
-                    className="text-gray-300 text-xs font-bold hover:text-gray-400"
-                  >
-                    删除
-                  </button>
+                  {isWife && (
+                    <button
+                      onClick={() => {
+                        dispatch({ type: 'REMOVE_WISHLIST_ITEM', id: item.id });
+                        showToast('已从许愿池移除');
+                      }}
+                      className="text-gray-300 text-xs font-bold hover:text-gray-400"
+                    >
+                      删除
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
