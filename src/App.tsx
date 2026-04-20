@@ -18,7 +18,7 @@ function PhoneShell() {
   const { currentTab, overlay } = useAppState();
 
   return (
-    <div className="w-full max-w-[400px] h-[850px] max-h-[90svh] bg-white shadow-2xl relative overflow-hidden flex flex-col rounded-[2.5rem] border-[8px] border-gray-900">
+    <div className="w-full bg-white relative overflow-hidden flex flex-col h-[100svh] md:max-w-[400px] md:h-[850px] md:max-h-[90svh] md:rounded-[2.5rem] md:border-[8px] md:border-gray-900 md:shadow-2xl">
 
       {/* Tab content */}
       {currentTab === 'home' && <HomeTab />}
