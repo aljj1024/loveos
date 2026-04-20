@@ -61,7 +61,11 @@ export interface Voucher {
   itemTitle: string;
   itemIcon: string;
   purchasedAt: string;
+  purchasedBy?: UserRole;
   isRedeemed: boolean;
+  pendingRedemption: boolean;
+  confirmedBy?: UserRole;
+  confirmedAt?: string;
 }
 
 // ─── Points Ledger ───────────────────────────────────────

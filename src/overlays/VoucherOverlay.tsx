@@ -1,4 +1,4 @@
-import { XCircle } from 'lucide-react';
+import { XCircle, Clock } from 'lucide-react';
 import { useAppState, useAppDispatch, useToast } from '../context/AppContext';
 
 export default function VoucherOverlay() {
@@ -11,10 +11,10 @@ export default function VoucherOverlay() {
 
   if (!voucher) return null;
 
-  function handleNotify() {
+  function handleRequestRedeem() {
     dispatch({ type: 'REDEEM_VOUCHER', voucherId: voucher!.id });
     dispatch({ type: 'CLOSE_OVERLAY' });
-    showToast('📣 已通知老婆履约！');
+    showToast('📣 已申请核销，等待对方确认！');
   }
 
   return (
@@ -45,20 +45,34 @@ export default function VoucherOverlay() {
             </div>
           </div>
           <div className="text-center mt-3">
-            <span className={`text-sm font-black px-3 py-1 rounded-full ${voucher.isRedeemed ? 'bg-gray-200 text-gray-500' : 'bg-rose-500 text-white'}`}>
-              {voucher.isRedeemed ? '已使用' : '未使用'}
+            <span className={`text-sm font-black px-3 py-1 rounded-full ${
+              voucher.isRedeemed
+                ? 'bg-gray-200 text-gray-500'
+                : voucher.pendingRedemption
+                ? 'bg-orange-100 text-orange-500'
+                : 'bg-rose-500 text-white'
+            }`}>
+              {voucher.isRedeemed ? '已使用' : voucher.pendingRedemption ? '待对方确认' : '未使用'}
             </span>
           </div>
         </div>
 
-        {!voucher.isRedeemed && (
+        {!voucher.isRedeemed && !voucher.pendingRedemption && (
           <button
-            onClick={handleNotify}
+            onClick={handleRequestRedeem}
             className="w-full bg-rose-500 text-white font-black py-3 rounded-2xl shadow-md shadow-rose-200 active:scale-95 transition-transform"
           >
-            通知对方履约 📣
+            申请核销 ✂️
           </button>
         )}
+
+        {voucher.pendingRedemption && (
+          <div className="w-full bg-orange-50 border-2 border-orange-200 rounded-2xl py-3 px-4 flex items-center justify-center gap-2">
+            <Clock size={16} className="text-orange-400 animate-pulse" />
+            <span className="text-sm font-black text-orange-500">等待对方确认中...</span>
+          </div>
+        )}
+
         {voucher.isRedeemed && (
           <button
             onClick={() => dispatch({ type: 'CLOSE_OVERLAY' })}

@@ -46,7 +46,9 @@ export default function EconomyTab() {
       itemTitle: title,
       itemIcon: icon,
       purchasedAt: new Date().toISOString(),
+      purchasedBy: currentUser ?? undefined,
       isRedeemed: false,
+      pendingRedemption: false,
     };
     dispatch({ type: 'BUY_ITEM', itemId, voucher });
     dispatch({ type: 'OPEN_OVERLAY', overlay: 'voucher', payload: { voucherId: voucher.id } });
@@ -243,36 +245,80 @@ export default function EconomyTab() {
             ))}
           </div>
 
-          {/* My vouchers */}
-          {vouchers.length > 0 && (
-            <div>
-              <h3 className="font-extrabold text-gray-700 mb-3 flex items-center gap-2">
-                <Trophy size={16} className="text-yellow-500" /> 我的凭证
-              </h3>
-              <div className="space-y-2">
-                {vouchers.map(v => (
-                  <div
-                    key={v.id}
-                    onClick={() => dispatch({ type: 'OPEN_OVERLAY', overlay: 'voucher', payload: { voucherId: v.id } })}
-                    className={`bg-white p-4 rounded-2xl border-2 flex items-center justify-between cursor-pointer active:scale-95 transition-transform ${v.isRedeemed ? 'border-gray-100 opacity-50' : 'border-rose-100'}`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl">{v.itemIcon}</span>
-                      <div>
-                        <div className="font-bold text-sm text-gray-800">{v.itemTitle}</div>
-                        <div className="text-xs text-gray-400 mt-0.5">
-                          {new Date(v.purchasedAt).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric' })}
+          {/* Partner's vouchers pending my confirmation */}
+          {(() => {
+            const pendingConfirm = vouchers.filter(v => v.pendingRedemption && v.purchasedBy !== currentUser);
+            if (!pendingConfirm.length) return null;
+            return (
+              <div>
+                <h3 className="font-extrabold text-orange-600 mb-3 flex items-center gap-2">
+                  ✂️ 待核销确认
+                </h3>
+                <div className="space-y-2">
+                  {pendingConfirm.map(v => (
+                    <div key={v.id} className="bg-orange-50 p-4 rounded-2xl border-2 border-orange-200">
+                      <div className="flex items-center gap-3 mb-3">
+                        <span className="text-2xl">{v.itemIcon}</span>
+                        <div>
+                          <div className="font-bold text-sm text-gray-800">{v.itemTitle}</div>
+                          <div className="text-xs text-orange-500 font-bold mt-0.5">对方申请核销此凭证</div>
                         </div>
                       </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => { dispatch({ type: 'CONFIRM_VOUCHER', voucherId: v.id }); showToast('✅ 已确认核销！'); }}
+                          className="flex-1 bg-green-500 text-white text-xs font-black py-2 rounded-xl active:scale-95 transition-transform"
+                        >
+                          ✅ 确认核销
+                        </button>
+                        <button
+                          onClick={() => { dispatch({ type: 'REJECT_VOUCHER', voucherId: v.id }); showToast('❌ 已拒绝核销'); }}
+                          className="flex-1 bg-gray-200 text-gray-600 text-xs font-black py-2 rounded-xl active:scale-95 transition-transform"
+                        >
+                          ❌ 拒绝
+                        </button>
+                      </div>
                     </div>
-                    <span className={`text-xs font-bold px-2 py-1 rounded-full ${v.isRedeemed ? 'bg-gray-100 text-gray-400' : 'bg-rose-100 text-rose-500'}`}>
-                      {v.isRedeemed ? '已使用' : '未使用'}
-                    </span>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
+
+          {/* My vouchers */}
+          {(() => {
+            const myVouchers = vouchers.filter(v => !v.purchasedBy || v.purchasedBy === currentUser);
+            if (!myVouchers.length) return null;
+            return (
+              <div>
+                <h3 className="font-extrabold text-gray-700 mb-3 flex items-center gap-2">
+                  <Trophy size={16} className="text-yellow-500" /> 我的凭证
+                </h3>
+                <div className="space-y-2">
+                  {myVouchers.map(v => (
+                    <div
+                      key={v.id}
+                      onClick={() => dispatch({ type: 'OPEN_OVERLAY', overlay: 'voucher', payload: { voucherId: v.id } })}
+                      className={`bg-white p-4 rounded-2xl border-2 flex items-center justify-between cursor-pointer active:scale-95 transition-transform ${v.isRedeemed ? 'border-gray-100 opacity-50' : v.pendingRedemption ? 'border-orange-200' : 'border-rose-100'}`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">{v.itemIcon}</span>
+                        <div>
+                          <div className="font-bold text-sm text-gray-800">{v.itemTitle}</div>
+                          <div className="text-xs text-gray-400 mt-0.5">
+                            {new Date(v.purchasedAt).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric' })}
+                          </div>
+                        </div>
+                      </div>
+                      <span className={`text-xs font-bold px-2 py-1 rounded-full ${v.isRedeemed ? 'bg-gray-100 text-gray-400' : v.pendingRedemption ? 'bg-orange-100 text-orange-500' : 'bg-rose-100 text-rose-500'}`}>
+                        {v.isRedeemed ? '已使用' : v.pendingRedemption ? '待确认' : '未使用'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
         </div>
       )}
     </div>
