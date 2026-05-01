@@ -1,0 +1,16 @@
+{
+  "name": "Claude Code Dev",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:20",
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "remoteEnv": {
+    "CLAUDE_CODE_OAUTH_TOKEN": "${localEnv:CLAUDE_CODE_OAUTH_TOKEN}"
+  },
+  "postCreateCommand": "npm install -g @anthropic-ai/claude-code",
+  "postAttachCommand": "claude --version 2>/dev/null && echo '✅ Claude Code 已就绪，直接输入 claude 开始' || echo '⚠️ claude 未安装，运行: npm install -g @anthropic-ai/claude-code'",
+  "hostRequirements": {
+    "cpus": 2,
+    "memory": "4gb"
+  }
+}
