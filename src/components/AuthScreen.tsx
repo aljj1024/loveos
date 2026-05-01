@@ -1,98 +1,60 @@
 import { useState } from 'react'
-import { Mail, ArrowRight, Loader2, CheckCircle2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
-type Step = 'email' | 'sent'
-
 export default function AuthScreen() {
-  const [step, setStep] = useState<Step>('email')
-  const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  async function handleSend() {
+  async function handleGoogleLogin() {
     setError('')
-    if (!email.includes('@')) {
-      setError('请输入正确的邮箱地址')
-      return
-    }
     setLoading(true)
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
       options: {
-        shouldCreateUser: true,
-        emailRedirectTo: window.location.origin,
+        redirectTo: window.location.origin,
       },
     })
-    setLoading(false)
     if (error) {
       setError(error.message)
-      return
+      setLoading(false)
     }
-    setStep('sent')
+    // On success, browser redirects to Google — no need to setLoading(false)
   }
 
   return (
     <div className="w-full h-[100svh] md:max-w-[400px] md:h-[850px] md:max-h-[90svh] md:rounded-[2.5rem] md:border-[8px] md:border-gray-900 md:shadow-2xl bg-white flex flex-col overflow-hidden">
-      {/* Header */}
       <div className="bg-gradient-to-br from-rose-400 to-pink-500 px-6 pt-14 pb-20 text-center">
         <div className="text-5xl mb-3">💑</div>
         <h1 className="text-3xl font-black text-white">LoveOS</h1>
         <p className="text-rose-100 text-sm mt-2 font-medium">两个人的专属操作系统</p>
       </div>
 
-      <div className="flex-1 px-6 -mt-10 relative z-10">
+      <div className="flex-1 px-6 -mt-10 relative z-10 flex flex-col justify-start">
         <div className="bg-white rounded-[2rem] shadow-xl border-4 border-white p-6">
-          {step === 'email' ? (
-            <>
-              <h2 className="font-black text-xl text-gray-800 mb-1 flex items-center gap-2">
-                <Mail size={20} className="text-rose-500" /> 邮箱登录
-              </h2>
-              <p className="text-sm text-gray-400 font-medium mb-5">输入邮箱，我们发一个登录链接给你</p>
+          <h2 className="font-black text-xl text-gray-800 mb-1">登录</h2>
+          <p className="text-sm text-gray-400 font-medium mb-6">使用 Google 账号一键登录</p>
 
-              <input
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                placeholder="your@email.com"
-                className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-4 py-3 text-sm font-bold text-gray-800 outline-none focus:border-rose-300 transition-colors mb-4"
-                autoFocus
-                onKeyDown={e => e.key === 'Enter' && handleSend()}
-              />
+          <button
+            onClick={handleGoogleLogin}
+            disabled={loading}
+            className="w-full bg-white border-2 border-gray-200 text-gray-700 font-black py-4 rounded-2xl flex items-center justify-center gap-3 shadow-sm active:scale-95 transition-transform disabled:opacity-60 hover:border-rose-300 hover:shadow-md"
+          >
+            {loading ? (
+              <Loader2 size={20} className="animate-spin text-rose-500" />
+            ) : (
+              <svg width="20" height="20" viewBox="0 0 48 48">
+                <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.36-8.16 2.36-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                <path fill="none" d="M0 0h48v48H0z"/>
+              </svg>
+            )}
+            {loading ? '跳转中...' : '使用 Google 登录'}
+          </button>
 
-              {error && <p className="text-rose-500 text-xs font-bold mb-3">⚠️ {error}</p>}
-
-              <button
-                onClick={handleSend}
-                disabled={loading}
-                className="w-full bg-rose-500 text-white font-black py-4 rounded-2xl flex items-center justify-center gap-2 shadow-md shadow-rose-200 active:scale-95 transition-transform disabled:opacity-60"
-              >
-                {loading ? <Loader2 size={18} className="animate-spin" /> : <ArrowRight size={18} />}
-                {loading ? '发送中...' : '发送登录链接'}
-              </button>
-            </>
-          ) : (
-            <>
-              <div className="text-center py-4">
-                <CheckCircle2 size={48} className="text-green-500 mx-auto mb-3" />
-                <h2 className="font-black text-xl text-gray-800 mb-2">邮件已发送！</h2>
-                <p className="text-sm text-gray-500 font-medium mb-1">
-                  登录链接已发到：
-                </p>
-                <p className="text-sm font-black text-rose-500 mb-5">{email}</p>
-                <p className="text-xs text-gray-400 font-medium">
-                  打开邮件，点击链接即可登录。链接有效期 1 小时。
-                </p>
-              </div>
-
-              <button
-                onClick={() => { setStep('email'); setError('') }}
-                className="w-full mt-2 text-xs font-bold text-gray-400 py-2 hover:text-rose-500 transition-colors"
-              >
-                重新输入邮箱
-              </button>
-            </>
-          )}
+          {error && <p className="text-rose-500 text-xs font-bold mt-3 text-center">⚠️ {error}</p>}
         </div>
 
         <p className="text-center text-xs text-gray-300 mt-4 font-medium">

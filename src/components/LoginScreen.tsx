@@ -1,4 +1,5 @@
 import { useAppDispatch, useAppState } from '../context/AppContext';
+import { supabase } from '../lib/supabase';
 import type { UserRole } from '../types';
 
 export default function LoginScreen() {
@@ -61,6 +62,13 @@ export default function LoginScreen() {
       <p className="text-gray-300 text-xs font-medium mt-10 text-center">
         数据存储在本设备 · 切换身份不会丢失数据
       </p>
+
+      <button
+        onClick={() => supabase.auth.signOut()}
+        className="mt-4 text-gray-300 text-xs font-medium hover:text-gray-400 transition-colors"
+      >
+        退出登录
+      </button>
     </div>
   );
 }

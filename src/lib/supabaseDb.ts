@@ -318,6 +318,16 @@ export async function createCouple(userId: string): Promise<{ coupleId: string; 
   return { coupleId, inviteCode }
 }
 
+export async function getPartnerUserId(coupleId: string, myUserId: string): Promise<string | null> {
+  const { data } = await supabase
+    .from('couples')
+    .select('user1_id, user2_id')
+    .eq('id', coupleId)
+    .single()
+  if (!data) return null
+  return data.user1_id === myUserId ? (data.user2_id as string | null) : (data.user1_id as string | null)
+}
+
 export async function joinCouple(userId: string, inviteCode: string): Promise<string> {
   const { data: couple, error: findError } = await supabase
     .from('couples')

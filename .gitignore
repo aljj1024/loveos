@@ -23,3 +23,6 @@ dist-ssr
 *.sln
 *.sw?
 .vercel
+
+# Supabase CLI 本地临时配置（每个开发者机器不同，不应入库）
+supabase/.temp/

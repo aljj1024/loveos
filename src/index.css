@@ -27,6 +27,14 @@
 .animate-fade-in-down { animation: fadeInDown 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 .animate-scale-in { animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
+@keyframes pointsFlyUp {
+  0%   { opacity: 1; transform: translateY(0) scale(1); }
+  60%  { opacity: 1; transform: translateY(-28px) scale(1.15); }
+  100% { opacity: 0; transform: translateY(-48px) scale(0.9); }
+}
+
+.animate-points-fly { animation: pointsFlyUp 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
 * {
   -webkit-tap-highlight-color: transparent;
 }

@@ -37,6 +37,7 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import {
   loadStateFromSupabase,
   getCoupleId,
+  getPartnerUserId,
   upsertTask,
   upsertApproval,
   upsertCoupleState,
@@ -52,6 +53,7 @@ import {
   ledgerFromRow,
   wishlistFromRow,
 } from '../lib/supabaseDb'
+import { subscribeToPush, notifyPartner } from '../lib/pushNotifications'
 
 // ─── State ───────────────────────────────────────────────
 
@@ -366,15 +368,32 @@ const TRANSIENT_FIELDS: (keyof AppState)[] = ['overlay', 'overlayPayload', 'toas
 
 // ─── Supabase sync (per-action) ───────────────────────────
 
-async function syncActionToSupabase(coupleId: string, action: AppAction, newState: AppState) {
+async function syncActionToSupabase(coupleId: string, myUserId: string, action: AppAction, newState: AppState) {
+  // Helper: fire-and-forget push to partner
+  async function pushPartner(title: string, body: string, tag?: string) {
+    const partnerId = await getPartnerUserId(coupleId, myUserId)
+    if (partnerId) notifyPartner(coupleId, partnerId, title, body, tag).catch(() => {})
+  }
+
   switch (action.type) {
     case 'CREATE_TASK': {
       const task = newState.tasks.find(t => t.id === action.task.id)
       if (task) await upsertTask(coupleId, task)
+      pushPartner('📋 新任务发布', `「${task?.title ?? ''}」 悬赏 ${task?.reward ?? 0} 积分，快去接单！`, 'task')
       break
     }
-    case 'ACCEPT_TASK':
-    case 'COMPLETE_TASK':
+    case 'ACCEPT_TASK': {
+      const task = newState.tasks.find(t => t.id === action.taskId)
+      if (task) await upsertTask(coupleId, task)
+      pushPartner('✅ 任务被接单了', `「${task?.title ?? ''}」已被接单，等待完成！`, 'task')
+      break
+    }
+    case 'COMPLETE_TASK': {
+      const task = newState.tasks.find(t => t.id === action.taskId)
+      if (task) await upsertTask(coupleId, task)
+      pushPartner('📤 任务待验收', `「${task?.title ?? ''}」已完成，需要你验收！`, 'task')
+      break
+    }
     case 'CANCEL_TASK': {
       const task = newState.tasks.find(t => t.id === action.taskId)
       if (task) await upsertTask(coupleId, task)
@@ -386,12 +405,14 @@ async function syncActionToSupabase(coupleId: string, action: AppAction, newStat
       await upsertCoupleState(coupleId, newState)
       const entry = newState.ledger[0]
       if (entry) await insertLedgerEntry(coupleId, entry)
+      pushPartner('🎉 任务验收通过', `「${task?.title ?? ''}」验收通过，+${task?.reward ?? 0} 积分！`, 'task')
       break
     }
 
     case 'SUBMIT_APPROVAL': {
       const approval = newState.approvals.find(a => a.id === action.approval.id)
       if (approval) await upsertApproval(coupleId, approval)
+      pushPartner('📜 新奏折待批阅', `「${approval?.title ?? ''}」请及时审批`, 'approval')
       break
     }
     case 'RESOLVE_APPROVAL': {
@@ -402,12 +423,14 @@ async function syncActionToSupabase(coupleId: string, action: AppAction, newStat
         const entry = newState.ledger[0]
         if (entry) await insertLedgerEntry(coupleId, entry)
       }
+      const label = action.status === 'approved' ? '已准奏 ✅' : '已驳回 ❌'
+      pushPartner(`奏折${label}`, `「${approval?.title ?? ''}」${label}`, 'approval')
       break
     }
     case 'CONDITIONAL_APPROVAL': {
       const approval = newState.approvals.find(a => a.id === action.id)
       if (approval) await upsertApproval(coupleId, approval)
-      // Linked task was created via CREATE_TASK — handled there
+      pushPartner('📎 附条件通过', `「${approval?.title ?? ''}」条件：${action.conditionText}`, 'approval')
       break
     }
 
@@ -418,11 +441,22 @@ async function syncActionToSupabase(coupleId: string, action: AppAction, newStat
       if (entry) await insertLedgerEntry(coupleId, entry)
       break
     }
-    case 'REDEEM_VOUCHER':
-    case 'CONFIRM_VOUCHER':
+    case 'REDEEM_VOUCHER': {
+      const voucher = newState.vouchers.find(v => v.id === action.voucherId)
+      if (voucher) await upsertVoucher(coupleId, voucher)
+      pushPartner('✂️ 凭证核销申请', `对方申请核销「${voucher?.itemTitle ?? ''}」，需要你确认`, 'voucher')
+      break
+    }
+    case 'CONFIRM_VOUCHER': {
+      const voucher = newState.vouchers.find(v => v.id === action.voucherId)
+      if (voucher) await upsertVoucher(coupleId, voucher)
+      pushPartner('✅ 凭证核销确认', `「${voucher?.itemTitle ?? ''}」已被确认核销`, 'voucher')
+      break
+    }
     case 'REJECT_VOUCHER': {
       const voucher = newState.vouchers.find(v => v.id === action.voucherId)
       if (voucher) await upsertVoucher(coupleId, voucher)
+      pushPartner('❌ 凭证核销被拒绝', `「${voucher?.itemTitle ?? ''}」核销申请被拒绝`, 'voucher')
       break
     }
     case 'ADD_STORE_ITEM':
@@ -478,6 +512,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   stateRef.current = state
   const coupleIdRef = useRef(coupleId)
   coupleIdRef.current = coupleId
+  const sessionRef = useRef(session)
+  sessionRef.current = session
 
   // Auth listener
   useEffect(() => {
@@ -486,20 +522,30 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       return
     }
 
+    const loadingTimeout = setTimeout(() => setAuthLoading(false), 8000)
+
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session)
       if (session) {
         const id = await getCoupleId(session.user.id)
         setCoupleId(id)
       }
+      clearTimeout(loadingTimeout)
+      setAuthLoading(false)
+    }).catch(() => {
+      clearTimeout(loadingTimeout)
       setAuthLoading(false)
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session)
       if (session) {
-        const id = await getCoupleId(session.user.id)
-        setCoupleId(id)
+        try {
+          const id = await getCoupleId(session.user.id)
+          setCoupleId(id)
+        } catch {
+          // ignore, user can retry
+        }
       } else {
         setCoupleId(null)
         dispatch({ type: 'RESET_APP' })
@@ -532,7 +578,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         if (data) dispatch({ type: 'HYDRATE', patch: { approvals: data.map(r => approvalFromRow(r as Record<string, unknown>)) } })
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'couple_state', filter: `couple_id=eq.${coupleId}` }, async () => {
-        const { data } = await supabase.from('couple_state').select('*').eq('couple_id', coupleId).single()
+        const { data } = await supabase.from('couple_state').select('*').eq('couple_id', coupleId).maybeSingle()
         if (data) dispatch({ type: 'HYDRATE', patch: {
           points: data.points as number,
           wikiProfiles: data.wiki_profiles as WikiProfile[],
@@ -561,13 +607,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return () => { supabase.removeChannel(channel) }
   }, [coupleId])
 
+  // Subscribe to push when couple is paired and user is logged in
+  useEffect(() => {
+    if (!coupleId || !isSupabaseConfigured) return
+    const userId = sessionRef.current?.user.id
+    if (!userId) return
+    subscribeToPush(coupleId, userId).catch(() => {})
+  }, [coupleId])
+
   // Wrapped dispatch: update local state + sync to Supabase
   const wrappedDispatch = useCallback((action: AppAction) => {
     dispatch(action)
     const id = coupleIdRef.current
-    if (id && isSupabaseConfigured && action.type !== 'HYDRATE') {
+    const userId = sessionRef.current?.user.id
+    if (id && userId && isSupabaseConfigured && action.type !== 'HYDRATE') {
       const newState = reducer(stateRef.current, action)
-      syncActionToSupabase(id, action, newState).catch(console.error)
+      syncActionToSupabase(id, userId, action, newState).catch(console.error)
     }
   }, [])
 
@@ -601,4 +656,18 @@ export function useCurrentMood() {
 export function useToast() {
   const dispatch = useAppDispatch()
   return (message: string) => dispatch({ type: 'SHOW_TOAST', message })
+}
+
+export function usePendingCounts() {
+  const { approvals, vouchers, tasks, currentUser } = useAppState()
+
+  const homeCount = approvals.filter(
+    a => a.status === 'pending' && a.submittedBy !== currentUser,
+  ).length
+
+  const economyCount =
+    vouchers.filter(v => v.pendingRedemption && v.purchasedBy !== currentUser).length +
+    tasks.filter(t => t.createdBy === currentUser && t.status === 'pending_verify').length
+
+  return { homeCount, economyCount, total: homeCount + economyCount }
 }

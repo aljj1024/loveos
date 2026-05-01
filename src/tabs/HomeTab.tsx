@@ -1,10 +1,15 @@
 import { ShoppingBag, ShieldAlert, ChevronRight, PlusCircle, ClipboardList } from 'lucide-react';
 import GlobalHeader from '../components/GlobalHeader';
-import { useAppState, useAppDispatch } from '../context/AppContext';
+import { useAppState, useAppDispatch, useToast } from '../context/AppContext';
 
 export default function HomeTab() {
-  const { approvals, currentUser } = useAppState();
+  const { approvals, vouchers, currentUser } = useAppState();
   const dispatch = useAppDispatch();
+  const showToast = useToast();
+
+  const pendingVoucherConfirms = vouchers.filter(
+    v => v.pendingRedemption && v.purchasedBy !== currentUser,
+  );
 
   const isWife = currentUser === 'wife';
 
@@ -84,6 +89,43 @@ export default function HomeTab() {
           </button>
         )}
       </div>
+
+      {/* Pending voucher confirmations — shown to whoever needs to confirm */}
+      {pendingVoucherConfirms.length > 0 && (
+        <div className="px-6 mb-2">
+          <h2 className="text-rose-900 font-extrabold mb-3 flex items-center gap-2 text-lg">
+            <span className="bg-white text-orange-500 p-1.5 rounded-xl shadow-sm">✂️</span>
+            待核销确认
+          </h2>
+          <div className="space-y-2">
+            {pendingVoucherConfirms.map(v => (
+              <div key={v.id} className="bg-orange-50 p-4 rounded-2xl border-2 border-orange-200">
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="text-2xl">{v.itemIcon}</span>
+                  <div>
+                    <div className="font-bold text-sm text-gray-800">{v.itemTitle}</div>
+                    <div className="text-xs text-orange-500 font-bold mt-0.5">对方申请核销此凭证</div>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => { dispatch({ type: 'CONFIRM_VOUCHER', voucherId: v.id }); showToast('✅ 已确认核销！'); }}
+                    className="flex-1 bg-green-500 text-white text-xs font-black py-2 rounded-xl active:scale-95 transition-transform"
+                  >
+                    ✅ 确认核销
+                  </button>
+                  <button
+                    onClick={() => { dispatch({ type: 'REJECT_VOUCHER', voucherId: v.id }); showToast('❌ 已拒绝核销'); }}
+                    className="flex-1 bg-gray-200 text-gray-600 text-xs font-black py-2 rounded-xl active:scale-95 transition-transform"
+                  >
+                    ❌ 拒绝
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="px-6">
         {isWife ? (
