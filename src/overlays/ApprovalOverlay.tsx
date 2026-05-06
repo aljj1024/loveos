@@ -1,34 +1,41 @@
-import { ChevronRight, Heart, Wrench, AlertOctagon } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { ChevronLeft, Heart, Wrench, AlertOctagon } from 'lucide-react';
 import { useAppState, useAppDispatch, useToast } from '../context/AppContext';
+import { useIsApprover } from '../hooks/useEffectiveRole';
+import { Card, Button, IconButton, Badge } from '../components/ui';
 
 export default function ApprovalOverlay() {
-  const { approvals, overlayPayload, currentUser, wikiProfiles } = useAppState();
+  const { approvals, overlayPayload, wikiProfiles } = useAppState();
   const dispatch = useAppDispatch();
   const showToast = useToast();
+  const isApprover = useIsApprover();
 
   const approvalId = overlayPayload?.approvalId as string;
-  const approval = approvals.find(a => a.id === approvalId);
+  const approval = approvals.find((a) => a.id === approvalId);
 
   if (!approval) return null;
 
-  const isWife = currentUser === 'wife';
-  const submitterProfile = wikiProfiles.find(p => p.id === (approval.submittedBy ?? 'husband'));
+  const submitterProfile = wikiProfiles.find((p) => p.id === (approval.submittedBy ?? 'husband'));
   const submitterName = submitterProfile?.displayName ?? '老公';
 
   function handleApprove() {
     dispatch({ type: 'RESOLVE_APPROVAL', id: approval!.id, status: 'approved', pointsDeducted: 50 });
     dispatch({ type: 'CLOSE_OVERLAY' });
-    showToast('✅ 已准奏！扣除 50 积分');
+    showToast('✅ 已通过！扣除 50 金币');
   }
 
   function handleConditional() {
-    dispatch({ type: 'OPEN_OVERLAY', overlay: 'conditional', payload: { approvalId: approval!.id } });
+    dispatch({
+      type: 'OPEN_OVERLAY',
+      overlay: 'conditional',
+      payload: { approvalId: approval!.id },
+    });
   }
 
   function handleReject() {
     dispatch({ type: 'RESOLVE_APPROVAL', id: approval!.id, status: 'rejected' });
     dispatch({ type: 'CLOSE_OVERLAY' });
-    showToast('⚠️ 已驳回！搓衣板警告 🙏');
+    showToast('⚠️ 已驳回！');
   }
 
   const templateEmoji: Record<string, string> = {
@@ -38,88 +45,141 @@ export default function ApprovalOverlay() {
     custom: '📝',
   };
 
-  const statusLabel: Record<string, { text: string; classes: string }> = {
-    approved: { text: '✅ 已准奏', classes: 'bg-green-100 text-green-700' },
-    rejected: { text: '❌ 已驳回', classes: 'bg-gray-100 text-gray-600' },
-    conditional: { text: '📎 条件通过', classes: 'bg-orange-100 text-orange-700' },
+  const statusConfig: Record<
+    string,
+    { text: string; tone: 'success' | 'neutral' | 'warning' }
+  > = {
+    approved: { text: '✅ 已通过', tone: 'success' },
+    rejected: { text: '❌ 已驳回', tone: 'neutral' },
+    conditional: { text: '📎 条件通过', tone: 'warning' },
   };
 
   return (
-    <div className="absolute inset-0 z-40 animate-slide-up flex flex-col h-full">
-      <div className="flex-1 bg-gray-100 pb-24 overflow-y-auto">
-        <div className="bg-gradient-to-br from-rose-400 to-pink-500 px-6 pt-10 pb-20">
-          <button
+    <motion.div
+      initial={{ y: '100%', opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      exit={{ y: '100%', opacity: 0 }}
+      transition={{ type: 'spring', stiffness: 320, damping: 32 }}
+      className="absolute inset-0 z-40 bg-bg-base flex flex-col h-full overflow-y-auto"
+    >
+      <div className="flex-1 pb-24">
+        {/* Header with brand gradient */}
+        <div
+          className="relative px-5 pt-10 pb-16 overflow-hidden"
+          style={{
+            background:
+              'linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-ink) 50%, var(--brand-accent) 100%)',
+          }}
+        >
+          <div
+            aria-hidden
+            className="absolute inset-0 opacity-25 pointer-events-none"
+            style={{
+              background:
+                'linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.3) 50%, transparent 70%)',
+            }}
+          />
+          <IconButton
+            ariaLabel="关闭"
             onClick={() => dispatch({ type: 'CLOSE_OVERLAY' })}
-            className="text-white mb-4 bg-white/20 p-2 rounded-full"
+            variant="soft"
+            size="md"
+            className="bg-white/25 text-white border border-white/30 backdrop-blur-sm mb-4"
           >
-            <ChevronRight size={24} className="rotate-180" />
-          </button>
-          <h1 className="text-3xl font-black text-white mb-2">审批详情</h1>
-          <p className="text-rose-100 text-sm">
-            {isWife ? '请慎重审阅，盖章后不可撤回' : '等待老婆大人审阅中...'}
+            <ChevronLeft size={20} />
+          </IconButton>
+          <h1 className="text-2xl font-black text-white tracking-wide drop-shadow-sm">
+            申请详情
+          </h1>
+          <p className="text-white/85 text-xs mt-1 font-semibold">
+            {isApprover ? '请慎重审阅，盖章后不可撤回' : `等待 ${submitterProfile?.displayName ? '审批' : '老婆审批'}中...`}
           </p>
         </div>
 
-        <div className="px-4 -mt-14 relative z-10">
-          <div className="bg-white rounded-[2rem] shadow-xl p-6 border-4 border-white mb-6">
-            <div className="flex items-center gap-4 border-b-2 border-dashed border-gray-100 pb-4 mb-4">
-              <div className="w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center text-2xl border-2 border-white">
+        <div className="px-5 -mt-12 relative z-10 space-y-4">
+          <Card ornate padding="lg" tone="surface">
+            <div className="flex items-center gap-3 border-b border-dashed border-line-subtle pb-3 mb-3">
+              <div className="w-12 h-12 bg-brand-soft rounded-pill flex items-center justify-center text-2xl">
                 {templateEmoji[approval.template] ?? '📝'}
               </div>
               <div>
-                <div className="font-black text-lg text-gray-800">{approval.title}</div>
-                <div className="text-xs text-gray-400 font-medium mt-1">
-                  {submitterName} · {new Date(approval.submittedAt).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                <div className="font-bold text-base text-ink-primary">{approval.title}</div>
+                <div className="text-xs text-ink-muted font-medium mt-0.5">
+                  {submitterName} ·{' '}
+                  {new Date(approval.submittedAt).toLocaleString('zh-CN', {
+                    month: 'numeric',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
                 </div>
               </div>
             </div>
 
-            <div className="text-sm space-y-2 font-bold text-gray-700">
+            <div className="text-sm space-y-1.5 font-semibold text-ink-secondary">
               <p>📝 事由：{approval.reason}</p>
               {approval.datetime && (
-                <p>⏰ 时间：{new Date(approval.datetime).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                <p>
+                  ⏰ 时间：
+                  {new Date(approval.datetime).toLocaleString('zh-CN', {
+                    month: 'numeric',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </p>
               )}
             </div>
 
-            <div className="mt-4 bg-rose-50 p-4 rounded-xl border border-rose-100">
-              <span className="text-rose-500 font-black text-xs block mb-1">✨ TA的诚意</span>
-              <span className="font-bold text-rose-900 text-sm">{approval.sincerity}</span>
+            <div className="mt-3 bg-brand-accent-soft p-3 rounded-button border border-brand-accent">
+              <span className="text-brand-ink font-bold text-xs block mb-1">✨ TA 的诚意</span>
+              <span className="font-semibold text-ink-primary text-sm">{approval.sincerity}</span>
             </div>
 
-            {/* Non-pending: show result status */}
-            {approval.status !== 'pending' && statusLabel[approval.status] && (
-              <div className={`mt-4 p-3 rounded-xl text-center font-black text-sm ${statusLabel[approval.status].classes}`}>
-                {statusLabel[approval.status].text}
-                {approval.conditionText && <p className="text-xs font-medium mt-1">条件：{approval.conditionText}</p>}
+            {approval.status !== 'pending' && statusConfig[approval.status] && (
+              <div className="mt-3 flex flex-col items-center gap-1">
+                <Badge tone={statusConfig[approval.status].tone} className="text-sm px-3 py-1">
+                  {statusConfig[approval.status].text}
+                </Badge>
+                {approval.conditionText && (
+                  <p className="text-xs font-semibold text-state-warning">
+                    条件：{approval.conditionText}
+                  </p>
+                )}
               </div>
             )}
-          </div>
+          </Card>
 
-          {/* Wife: action buttons. Husband: read-only */}
-          {isWife && approval.status === 'pending' && (
-            <div className="grid grid-cols-2 gap-3 pb-4">
-              <button
+          {isApprover && approval.status === 'pending' && (
+            <div className="grid grid-cols-2 gap-2.5">
+              <Button
+                fullWidth
+                size="lg"
                 onClick={handleApprove}
-                className="col-span-2 bg-green-500 text-white p-4 rounded-2xl font-black text-lg flex items-center justify-center gap-2 shadow-md active:scale-95 transition-transform"
+                className="col-span-2 bg-state-success text-white"
               >
-                <Heart size={20} fill="currentColor" /> 准奏 (扣 50 积分)
-              </button>
-              <button
+                <Heart size={18} fill="currentColor" /> 通过（扣 50 金币）
+              </Button>
+              <Button
+                fullWidth
+                size="md"
                 onClick={handleConditional}
-                className="bg-orange-400 text-white p-4 rounded-2xl font-black text-sm flex flex-col items-center gap-2 shadow-md active:scale-95 transition-transform"
+                variant="accent"
               >
-                <Wrench size={24} /> 拿家务换
-              </button>
-              <button
+                <Wrench size={16} /> 附条件通过
+              </Button>
+              <Button
+                fullWidth
+                size="md"
                 onClick={handleReject}
-                className="bg-gray-800 text-white p-4 rounded-2xl font-black text-sm flex flex-col items-center gap-2 shadow-md active:scale-95 transition-transform"
+                variant="danger"
               >
-                <AlertOctagon size={24} className="text-rose-400" /> 驳回警告
-              </button>
+                <AlertOctagon size={16} /> 驳回
+              </Button>
             </div>
           )}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { AppProvider, useAppState, useAppDispatch, useAuthState } from './context/AppContext'
 import AuthScreen from './components/AuthScreen'
 import CoupleSetup from './components/CoupleSetup'
@@ -14,11 +15,39 @@ import FormOverlay from './overlays/FormOverlay'
 import ApprovalOverlay from './overlays/ApprovalOverlay'
 import ConditionalOverlay from './overlays/ConditionalOverlay'
 import TaskCreateOverlay from './overlays/TaskCreateOverlay'
+import StoreItemCreateOverlay from './overlays/StoreItemCreateOverlay'
 import VoucherOverlay from './overlays/VoucherOverlay'
 import WikiEditOverlay from './overlays/WikiEditOverlay'
 import StatsOverlay from './overlays/StatsOverlay'
 import { isSupabaseConfigured, devBypassAuth } from './lib/supabase'
 import './index.css'
+
+function FlipModeRibbon() {
+  const { flipMode } = useAppState()
+  return (
+    <AnimatePresence>
+      {flipMode && (
+        <motion.div
+          initial={{ y: -30, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: -30, opacity: 0 }}
+          transition={{ type: 'spring', stiffness: 320, damping: 26 }}
+          className="absolute top-2.5 left-1/2 -translate-x-1/2 z-40"
+        >
+          <div
+            className="bg-gradient-to-r from-brand to-brand-ink text-white text-[11px] font-black tracking-widest px-3 py-1 rounded-pill border border-white/40 backdrop-blur-sm"
+            style={{
+              boxShadow:
+                '0 6px 18px -4px rgba(167,139,250,0.6), inset 0 1px 0 rgba(255,255,255,0.4)',
+            }}
+          >
+            🔄 倒反天罡 · 角色已翻转
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+}
 
 function DevRoleSwitcher() {
   const { currentUser } = useAppState()
@@ -50,6 +79,7 @@ function PhoneShell() {
     >
 
       <DevRoleSwitcher />
+      <FlipModeRibbon />
 
       {currentTab === 'home' && <HomeTab />}
       {currentTab === 'economy' && <EconomyTab />}
@@ -60,11 +90,12 @@ function PhoneShell() {
       {overlay === 'approval' && <ApprovalOverlay />}
       {overlay === 'conditional' && <ConditionalOverlay />}
       {overlay === 'taskCreate' && <TaskCreateOverlay />}
+      {overlay === 'storeItemCreate' && <StoreItemCreateOverlay />}
       {overlay === 'voucher' && <VoucherOverlay />}
       {overlay === 'wikiEdit' && <WikiEditOverlay />}
       {(overlay === 'stats' || overlay === 'approvalHistory') && <StatsOverlay />}
 
-      {overlay !== 'voucher' && overlay !== 'conditional' && overlay !== 'wikiEdit' && (
+      {overlay !== 'voucher' && overlay !== 'conditional' && overlay !== 'wikiEdit' && overlay !== 'storeItemCreate' && (
         <BottomNav />
       )}
 

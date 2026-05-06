@@ -73,6 +73,7 @@ export interface AppState {
   wishlist: WishlistItem[]
   wifeMood: MoodState
   husbandMood: MoodState
+  flipMode: boolean
 }
 
 const defaultMoodState: MoodState = { current: DEFAULT_MOOD, setAt: new Date().toISOString() }
@@ -93,6 +94,7 @@ const defaultState: AppState = {
   wishlist: DEFAULT_WISHLIST,
   wifeMood: defaultMoodState,
   husbandMood: defaultMoodState,
+  flipMode: false,
 }
 
 // ─── Actions ─────────────────────────────────────────────
@@ -118,6 +120,8 @@ type AppAction =
   | { type: 'CONFIRM_VOUCHER'; voucherId: string }
   | { type: 'REJECT_VOUCHER'; voucherId: string }
   | { type: 'ADD_STORE_ITEM'; item: StoreItem }
+  | { type: 'REMOVE_STORE_ITEM'; itemId: string }
+  | { type: 'TOGGLE_FLIP_MODE' }
   | { type: 'ADD_POINTS'; amount: number; description: string; entryType?: LedgerEntryType; relatedId?: string }
   | { type: 'DEDUCT_POINTS'; amount: number; description: string; entryType?: LedgerEntryType; relatedId?: string }
   | { type: 'UPDATE_PROFILE_FIELD'; profileId: 'wife' | 'husband'; key: string; value: string }
@@ -281,6 +285,12 @@ function reducer(state: AppState, action: AppAction): AppState {
 
     case 'ADD_STORE_ITEM':
       return { ...state, storeItems: [...state.storeItems, action.item] }
+
+    case 'REMOVE_STORE_ITEM':
+      return { ...state, storeItems: state.storeItems.filter(i => i.id !== action.itemId) }
+
+    case 'TOGGLE_FLIP_MODE':
+      return { ...state, flipMode: !state.flipMode }
 
     case 'ADD_POINTS': {
       const points = state.points + action.amount

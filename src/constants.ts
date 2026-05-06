@@ -12,10 +12,24 @@ export const DEFAULT_MOODS: Mood[] = [
 export const DEFAULT_MOOD: Mood = DEFAULT_MOODS[5];
 
 export const DEFAULT_STORE_ITEMS: StoreItem[] = [
-  { id: 's1', title: 'PS5 畅玩两小时', cost: 100, icon: '🎮', colorClass: 'bg-blue-100 text-blue-500', isCustom: false },
-  { id: 's2', title: '免除一次争吵权', cost: 800, icon: '🛡️', colorClass: 'bg-yellow-100 text-yellow-600', isCustom: false },
-  { id: 's3', title: '买新外设/游戏额度', cost: 2000, icon: '⌨️', colorClass: 'bg-purple-100 text-purple-500', isCustom: false },
-  { id: 's4', title: '随叫随到按摩券', cost: 150, icon: '💆‍♂️', colorClass: 'bg-green-100 text-green-500', isCustom: false },
+  // 🍬 小确幸
+  { id: 's_milktea', title: '一杯奶茶', cost: 30, icon: '🧋', colorClass: 'bg-orange-100 text-orange-500', isCustom: false },
+  { id: 's_hug', title: '抱抱券', cost: 50, icon: '🤗', colorClass: 'bg-pink-100 text-pink-500', isCustom: false },
+  { id: 's_song', title: '点歌权', cost: 50, icon: '🎤', colorClass: 'bg-fuchsia-100 text-fuchsia-500', isCustom: false },
+  { id: 's_massage5', title: '5 分钟按摩', cost: 80, icon: '💆‍♂️', colorClass: 'bg-green-100 text-green-500', isCustom: false },
+  // ⭐ 一般奖励
+  { id: 's_ps5', title: 'PS5 畅玩两小时', cost: 150, icon: '🎮', colorClass: 'bg-blue-100 text-blue-500', isCustom: false },
+  { id: 's_takeout', title: '外卖自由（任点）', cost: 200, icon: '🍱', colorClass: 'bg-amber-100 text-amber-600', isCustom: false },
+  { id: 's_movie', title: '今晚电影夜', cost: 200, icon: '🎬', colorClass: 'bg-indigo-100 text-indigo-500', isCustom: false },
+  { id: 's_remote', title: '独占遥控器一晚', cost: 250, icon: '📺', colorClass: 'bg-sky-100 text-sky-500', isCustom: false },
+  // 💎 特权
+  { id: 's_truce', title: '免除一次争吵权', cost: 600, icon: '🛡️', colorClass: 'bg-yellow-100 text-yellow-600', isCustom: false },
+  { id: 's_weekend', title: '独占周末安排权', cost: 800, icon: '🗓️', colorClass: 'bg-violet-100 text-violet-500', isCustom: false },
+  { id: 's_dinner', title: '决定吃啥的至高权', cost: 500, icon: '🍽️', colorClass: 'bg-rose-100 text-rose-500', isCustom: false },
+  { id: 's_gear', title: '买新外设/游戏额度', cost: 1200, icon: '⌨️', colorClass: 'bg-purple-100 text-purple-500', isCustom: false },
+  // 👑 王炸大奖
+  { id: 's_gift', title: '礼物预算 ¥500', cost: 2500, icon: '🎁', colorClass: 'bg-red-100 text-red-500', isCustom: false },
+  { id: 's_travel', title: '旅行基金 ¥1000', cost: 5000, icon: '✈️', colorClass: 'bg-cyan-100 text-cyan-500', isCustom: false },
 ];
 
 export const DEFAULT_TASKS: Task[] = [
@@ -54,8 +68,10 @@ export const DEFAULT_WIKI_PROFILES: WikiProfile[] = [
 ];
 
 export const DEFAULT_WISHLIST: WishlistItem[] = [
-  { id: 'w1', name: '某牌新款托特包', emoji: '👜', notes: '官网黑色款', addedAt: new Date(Date.now() - 86400000).toISOString() },
-  { id: 'w2', name: '香氛蜡烛套装', emoji: '🕯️', notes: '小红书同款，薰衣草香', addedAt: new Date(Date.now() - 172800000).toISOString() },
+  { id: 'w1', name: '某牌新款托特包', emoji: '👜', notes: '官网黑色款', addedAt: new Date(Date.now() - 86400000).toISOString(), addedBy: 'wife' },
+  { id: 'w2', name: '香氛蜡烛套装', emoji: '🕯️', notes: '小红书同款，薰衣草香', addedAt: new Date(Date.now() - 172800000).toISOString(), addedBy: 'wife' },
+  { id: 'w3', name: '机械键盘', emoji: '⌨️', notes: 'Cherry 红轴 / 茶轴', addedAt: new Date(Date.now() - 86400000).toISOString(), addedBy: 'husband' },
+  { id: 'w4', name: '联名球鞋', emoji: '👟', notes: '42 码就行', addedAt: new Date(Date.now() - 259200000).toISOString(), addedBy: 'husband' },
 ];
 
 export const TASK_ICONS = ['🧹', '📦', '🍳', '🐕', '🛒', '💊', '🚗', '🌿', '🧺', '💡'];

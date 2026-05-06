@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { ShoppingBag, ShieldAlert, ChevronRight, PlusCircle, ClipboardList } from 'lucide-react';
 import GlobalHeader from '../components/GlobalHeader';
 import { useAppState, useAppDispatch, useToast } from '../context/AppContext';
+import { useIsApprover, useEffectiveRole } from '../hooks/useEffectiveRole';
 import { Card, Badge, EmptyState, Button } from '../components/ui';
 
 const statusBadge: Record<
@@ -18,15 +19,16 @@ export default function HomeTab() {
   const { approvals, vouchers, currentUser } = useAppState();
   const dispatch = useAppDispatch();
   const showToast = useToast();
+  const isApprover = useIsApprover();
+  const effectiveRole = useEffectiveRole();
 
   const pendingVoucherConfirms = vouchers.filter(
     (v) => v.pendingRedemption && v.purchasedBy !== currentUser
   );
 
-  const isWife = currentUser === 'wife';
-
+  // Approver sees pending requests submitted by the *other* effective role.
   const incomingApprovals = approvals.filter(
-    (a) => a.status === 'pending' && a.submittedBy !== 'wife'
+    (a) => a.status === 'pending' && a.submittedBy !== effectiveRole
   );
   const myApprovals = approvals.filter((a) => a.submittedBy === currentUser).slice(0, 5);
 
@@ -38,16 +40,16 @@ export default function HomeTab() {
     >
       <GlobalHeader
         title="任务"
-        subtitle={isWife ? '今天也是温柔的老婆 👑' : '今天也是努力搬砖的一天 ☀️'}
+        subtitle={isApprover ? '今天也是温柔的老婆 👑' : '今天也是努力搬砖的一天 ☀️'}
       />
 
       <div className="px-5 py-5">
         <h2 className="text-ink-primary font-bold mb-3 flex items-center gap-2 text-base">
           <span className="bg-brand-soft text-brand-ink p-1.5 rounded-button">✨</span>
-          {isWife ? '审批中心' : '快速发起'}
+          {isApprover ? '审批中心' : '快速发起'}
         </h2>
 
-        {isWife ? (
+        {isApprover ? (
           <Card
             hoverable
             padding="lg"
@@ -110,7 +112,7 @@ export default function HomeTab() {
           </div>
         )}
 
-        {!isWife && (
+        {!isApprover && (
           <Button
             onClick={() =>
               dispatch({ type: 'OPEN_OVERLAY', overlay: 'form', payload: { template: 'custom' } })
@@ -173,7 +175,7 @@ export default function HomeTab() {
       )}
 
       <div className="px-5">
-        {isWife ? (
+        {isApprover ? (
           <>
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-ink-primary font-bold text-base">待我审批</h2>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Coins, PlusCircle, CheckCircle2, Clock, Trophy } from 'lucide-react';
+import { Coins, PlusCircle, CheckCircle2, Clock, Trophy, X } from 'lucide-react';
 import GlobalHeader from '../components/GlobalHeader';
 import { useAppState, useAppDispatch, useToast } from '../context/AppContext';
 import type { Voucher } from '../types';
@@ -251,8 +251,23 @@ export default function EconomyTab() {
                 hoverable
                 padding="md"
                 tone="surface"
-                className="flex flex-col items-center text-center"
+                className="relative flex flex-col items-center text-center"
               >
+                {item.isCustom && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (confirm(`删除「${item.title}」？`)) {
+                        dispatch({ type: 'REMOVE_STORE_ITEM', itemId: item.id });
+                        showToast('🗑️ 已下架');
+                      }
+                    }}
+                    aria-label={`删除 ${item.title}`}
+                    className="absolute top-1.5 right-1.5 w-5 h-5 rounded-pill bg-bg-base/90 text-ink-muted flex items-center justify-center active:scale-90 transition-transform z-10 hover:text-state-danger"
+                  >
+                    <X size={12} />
+                  </button>
+                )}
                 <div
                   className={`w-14 h-14 ${item.colorClass} rounded-pill flex items-center justify-center mb-2.5 text-2xl shadow-inner`}
                   style={{
@@ -262,7 +277,7 @@ export default function EconomyTab() {
                 >
                   {item.icon}
                 </div>
-                <div className="font-bold text-ink-primary text-sm mb-1">{item.title}</div>
+                <div className="font-bold text-ink-primary text-sm mb-1 line-clamp-1">{item.title}</div>
                 <div className="text-xs font-bold text-brand-ink mb-3 flex items-center gap-1">
                   <Coins size={11} /> {item.cost}
                 </div>
@@ -277,6 +292,22 @@ export default function EconomyTab() {
                 </Button>
               </Card>
             ))}
+
+            {/* + 自定义商品 入口 */}
+            <motion.button
+              onClick={() => dispatch({ type: 'OPEN_OVERLAY', overlay: 'storeItemCreate' })}
+              whileTap={{ scale: 0.97 }}
+              transition={{ type: 'spring', stiffness: 380, damping: 22 }}
+              className="rounded-card border-2 border-dashed border-brand/40 bg-brand-soft/30 flex flex-col items-center justify-center gap-2 py-6 text-brand-ink active:bg-brand-soft/50 transition-colors min-h-[180px]"
+            >
+              <div className="w-14 h-14 bg-brand-soft rounded-pill flex items-center justify-center">
+                <PlusCircle size={26} />
+              </div>
+              <div className="font-bold text-sm">自定义商品</div>
+              <div className="text-[10px] text-ink-muted px-3 text-center">
+                自己上架奖励，价格自己定
+              </div>
+            </motion.button>
           </div>
 
           {(() => {

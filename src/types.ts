@@ -137,6 +137,7 @@ export type OverlayId =
   | 'approval'
   | 'conditional'
   | 'taskCreate'
+  | 'storeItemCreate'
   | 'voucher'
   | 'wikiEdit'
   | 'stats'

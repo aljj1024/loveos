@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { XCircle } from 'lucide-react';
 import { useAppState, useAppDispatch, useToast } from '../context/AppContext';
-
 import type { Task } from '../types';
+import { Drawer, Button, Textarea } from '../components/ui';
 
 export default function ConditionalOverlay() {
   const { approvals, overlayPayload, currentUser } = useAppState();
@@ -11,9 +10,13 @@ export default function ConditionalOverlay() {
   const [condition, setCondition] = useState('');
 
   const approvalId = overlayPayload?.approvalId as string;
-  const approval = approvals.find(a => a.id === approvalId);
+  const approval = approvals.find((a) => a.id === approvalId);
 
   if (!approval) return null;
+
+  function close() {
+    dispatch({ type: 'CLOSE_OVERLAY' });
+  }
 
   function handleConfirm() {
     if (!condition.trim()) return;
@@ -29,45 +32,51 @@ export default function ConditionalOverlay() {
       sourceApprovalId: approvalId,
     };
     dispatch({ type: 'CREATE_TASK', task: newTask });
-    dispatch({ type: 'CONDITIONAL_APPROVAL', id: approvalId, conditionText: condition, taskId });
-    dispatch({ type: 'CLOSE_OVERLAY' });
-    showToast('🧹 已附带条件通过！任务已生成到任务板');
+    dispatch({
+      type: 'CONDITIONAL_APPROVAL',
+      id: approvalId,
+      conditionText: condition,
+      taskId,
+    });
+    close();
+    showToast('🧹 已附条件通过！任务已生成到任务广场');
   }
 
   return (
-    <div className="absolute inset-0 z-50 bg-black/40 flex items-end animate-fade-in">
-      <div className="w-full bg-white rounded-t-[2rem] p-6 animate-slide-up">
-        <div className="flex items-center justify-between mb-5">
-          <h2 className="font-black text-xl text-gray-800">🧹 附带条件通过</h2>
-          <button onClick={() => dispatch({ type: 'CLOSE_OVERLAY' })} className="text-gray-400">
-            <XCircle size={26} />
-          </button>
-        </div>
-
-        <p className="text-sm text-gray-500 mb-4 font-medium">
-          审批通过，但需完成以下任务。任务将自动添加到悬赏任务板：
+    <Drawer open onClose={close} side="bottom">
+      <div className="p-5">
+        <h2 className="font-bold text-lg text-ink-primary mb-3">🧹 附带条件通过</h2>
+        <p className="text-sm text-ink-muted mb-3 font-medium">
+          审批通过，但需完成以下任务。任务会自动添加到「宝物 → 任务广场」：
         </p>
 
-        <div className="bg-orange-50 p-4 rounded-2xl border-2 border-orange-200 mb-2">
-          <p className="text-xs font-bold text-orange-500 mb-2">📌 原申请：{approval.title}</p>
-          <textarea
+        <div className="bg-brand-accent-soft p-4 rounded-button border-2 border-brand-accent mb-3">
+          <p className="text-xs font-bold text-brand-ink mb-2">
+            📌 原申请：{approval.title}
+          </p>
+          <Textarea
             rows={2}
             value={condition}
-            onChange={e => setCondition(e.target.value)}
+            onChange={(e) => setCondition(e.target.value)}
             placeholder="例如：洗碗三天、帮买奶茶、给我捏肩..."
-            className="w-full bg-white rounded-xl px-4 py-3 text-sm font-medium border border-orange-100 outline-none resize-none"
             autoFocus
+            className="bg-bg-surface"
           />
         </div>
 
-        <button
-          onClick={handleConfirm}
-          disabled={!condition.trim()}
-          className="w-full bg-orange-400 text-white font-black py-4 rounded-2xl mt-3 disabled:opacity-40 active:scale-95 transition-transform shadow-md"
-        >
-          确认盖章 ✅
-        </button>
+        <div className="flex gap-2">
+          <Button variant="secondary" fullWidth onClick={close}>
+            取消
+          </Button>
+          <Button
+            fullWidth
+            onClick={handleConfirm}
+            disabled={!condition.trim()}
+          >
+            确认盖章 ✅
+          </Button>
+        </div>
       </div>
-    </div>
+    </Drawer>
   );
 }

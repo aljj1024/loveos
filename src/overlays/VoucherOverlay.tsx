@@ -1,5 +1,6 @@
-import { XCircle, Clock } from 'lucide-react';
+import { Clock } from 'lucide-react';
 import { useAppState, useAppDispatch, useToast } from '../context/AppContext';
+import { Modal, Button } from '../components/ui';
 
 export default function VoucherOverlay() {
   const { vouchers, overlayPayload } = useAppState();
@@ -7,81 +8,84 @@ export default function VoucherOverlay() {
   const showToast = useToast();
 
   const voucherId = overlayPayload?.voucherId as string;
-  const voucher = vouchers.find(v => v.id === voucherId);
+  const voucher = vouchers.find((v) => v.id === voucherId);
 
   if (!voucher) return null;
 
+  function close() {
+    dispatch({ type: 'CLOSE_OVERLAY' });
+  }
+
   function handleRequestRedeem() {
     dispatch({ type: 'REDEEM_VOUCHER', voucherId: voucher!.id });
-    dispatch({ type: 'CLOSE_OVERLAY' });
+    close();
     showToast('📣 已申请核销，等待对方确认！');
   }
 
   return (
-    <div className="absolute inset-0 z-40 bg-black/50 flex items-center justify-center animate-fade-in px-6">
-      <div className="bg-white rounded-[2rem] p-8 w-full max-w-[320px] animate-scale-in relative">
-        <button
-          onClick={() => dispatch({ type: 'CLOSE_OVERLAY' })}
-          className="absolute top-4 right-4 text-gray-300"
-        >
-          <XCircle size={24} />
-        </button>
-
-        {/* Voucher card */}
-        <div className="text-center mb-6">
-          <div className="text-6xl mb-3">{voucher.itemIcon}</div>
-          <h2 className="font-black text-xl text-gray-800">{voucher.itemTitle}</h2>
-          <p className="text-xs text-gray-400 mt-1 font-medium">
-            购于 {new Date(voucher.purchasedAt).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+    <Modal open onClose={close}>
+      <div className="p-6 relative">
+        {/* Voucher header */}
+        <div className="text-center mb-5">
+          <div className="text-6xl mb-2">{voucher.itemIcon}</div>
+          <h2 className="font-bold text-lg text-ink-primary">{voucher.itemTitle}</h2>
+          <p className="text-xs text-ink-muted mt-1 font-medium">
+            购于{' '}
+            {new Date(voucher.purchasedAt).toLocaleString('zh-CN', {
+              month: 'numeric',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+            })}
           </p>
         </div>
 
-        {/* Decorative voucher border */}
-        <div className="border-2 border-dashed border-rose-200 rounded-2xl p-4 mb-6 bg-rose-50">
+        {/* Voucher body — dashed border ticket vibe */}
+        <div className="border-2 border-dashed border-brand-accent rounded-button p-4 mb-5 bg-brand-accent-soft">
           <div className="flex items-center justify-between">
-            <div className="text-xs text-rose-400 font-bold">凭证编号</div>
-            <div className="text-xs text-rose-600 font-mono font-bold">
+            <div className="text-xs text-brand-ink font-bold">凭证编号</div>
+            <div className="text-xs text-brand-ink font-mono font-bold tracking-wider">
               {voucher.id.slice(-8).toUpperCase()}
             </div>
           </div>
           <div className="text-center mt-3">
-            <span className={`text-sm font-black px-3 py-1 rounded-full ${
-              voucher.isRedeemed
-                ? 'bg-gray-200 text-gray-500'
+            <span
+              className={`text-sm font-bold px-3 py-1 rounded-pill ${
+                voucher.isRedeemed
+                  ? 'bg-brand-soft text-ink-muted'
+                  : voucher.pendingRedemption
+                  ? 'bg-state-warning/20 text-state-warning'
+                  : 'bg-brand text-ink-on-brand'
+              }`}
+            >
+              {voucher.isRedeemed
+                ? '已使用'
                 : voucher.pendingRedemption
-                ? 'bg-orange-100 text-orange-500'
-                : 'bg-rose-500 text-white'
-            }`}>
-              {voucher.isRedeemed ? '已使用' : voucher.pendingRedemption ? '待对方确认' : '未使用'}
+                ? '待对方确认'
+                : '未使用'}
             </span>
           </div>
         </div>
 
         {!voucher.isRedeemed && !voucher.pendingRedemption && (
-          <button
-            onClick={handleRequestRedeem}
-            className="w-full bg-rose-500 text-white font-black py-3 rounded-2xl shadow-md shadow-rose-200 active:scale-95 transition-transform"
-          >
+          <Button fullWidth size="lg" onClick={handleRequestRedeem}>
             申请核销 ✂️
-          </button>
+          </Button>
         )}
 
         {voucher.pendingRedemption && (
-          <div className="w-full bg-orange-50 border-2 border-orange-200 rounded-2xl py-3 px-4 flex items-center justify-center gap-2">
-            <Clock size={16} className="text-orange-400 animate-pulse" />
-            <span className="text-sm font-black text-orange-500">等待对方确认中...</span>
+          <div className="w-full bg-state-warning/15 border border-state-warning/30 rounded-button py-3 px-4 flex items-center justify-center gap-2">
+            <Clock size={16} className="text-state-warning animate-pulse" />
+            <span className="text-sm font-bold text-state-warning">等待对方确认中...</span>
           </div>
         )}
 
         {voucher.isRedeemed && (
-          <button
-            onClick={() => dispatch({ type: 'CLOSE_OVERLAY' })}
-            className="w-full bg-gray-100 text-gray-500 font-black py-3 rounded-2xl"
-          >
+          <Button fullWidth variant="secondary" onClick={close}>
             关闭
-          </button>
+          </Button>
         )}
       </div>
-    </div>
+    </Modal>
   );
 }

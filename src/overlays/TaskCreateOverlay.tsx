@@ -1,22 +1,28 @@
 import { useState } from 'react';
-import { XCircle } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { X, Coins } from 'lucide-react';
 import { useAppDispatch, useAppState, useToast } from '../context/AppContext';
 import { TASK_ICONS } from '../constants';
+import { useTaskRewardBaseline } from '../hooks/useTaskRewardBaseline';
 import type { Task } from '../types';
+import { Card, Button, Input, IconButton } from '../components/ui';
 
 export default function TaskCreateOverlay() {
   const dispatch = useAppDispatch();
   const { currentUser } = useAppState();
   const showToast = useToast();
+  const { baseline, sampleCount } = useTaskRewardBaseline();
+
   const [title, setTitle] = useState('');
   const [icon, setIcon] = useState('🧹');
-  const [reward, setReward] = useState(50);
+  const [reward, setReward] = useState(baseline);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!title.trim() || reward <= 0) return;
     const newTask: Task = {
       id: `task_${Date.now()}`,
-      title,
+      title: title.trim(),
       icon,
       reward,
       createdBy: currentUser ?? 'wife',
@@ -25,51 +31,67 @@ export default function TaskCreateOverlay() {
     };
     dispatch({ type: 'CREATE_TASK', task: newTask });
     dispatch({ type: 'CLOSE_OVERLAY' });
-    showToast(`✅ 任务已发布！悬赏 ${reward} 积分`);
+    showToast(`✅ 任务已发布！悬赏 ${reward} 金币`);
   }
 
   return (
-    <div className="absolute inset-0 z-40 bg-white animate-slide-up flex flex-col h-full overflow-y-auto">
-      <div className="bg-white/80 backdrop-blur-md px-6 pt-10 pb-4 sticky top-0 z-10 border-b border-gray-100 flex items-center">
-        <button onClick={() => dispatch({ type: 'CLOSE_OVERLAY' })} className="text-gray-400 p-2 -ml-2">
-          <XCircle size={26} />
-        </button>
-        <h1 className="text-xl font-black text-gray-800 ml-2">发布悬赏任务 💰</h1>
+    <motion.div
+      initial={{ y: '100%', opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      exit={{ y: '100%', opacity: 0 }}
+      transition={{ type: 'spring', stiffness: 320, damping: 32 }}
+      className="absolute inset-0 z-40 bg-bg-base flex flex-col h-full overflow-y-auto"
+    >
+      <div className="bg-bg-elevated/85 backdrop-blur-md px-5 pt-10 pb-3 sticky top-0 z-10 border-b border-line-subtle flex items-center gap-2">
+        <IconButton
+          ariaLabel="关闭"
+          onClick={() => dispatch({ type: 'CLOSE_OVERLAY' })}
+          variant="ghost"
+          size="md"
+        >
+          <X size={20} />
+        </IconButton>
+        <h1 className="text-lg font-bold text-ink-primary">发布悬赏任务 💰</h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="px-6 py-6 space-y-5">
-        <div className="bg-white p-6 rounded-3xl shadow-sm border-2 border-gray-100 space-y-4">
+      <form onSubmit={handleSubmit} className="px-5 py-5 space-y-4 pb-24">
+        <Card ornate padding="lg" tone="surface" className="space-y-4">
           <div>
-            <label className="block text-sm font-extrabold text-gray-700 mb-2">任务名称</label>
-            <input
-              type="text"
+            <label className="block text-xs font-bold text-ink-muted mb-2">任务名称</label>
+            <Input
               value={title}
-              onChange={e => setTitle(e.target.value)}
+              onChange={(e) => setTitle(e.target.value)}
               placeholder="例如：今晚洗碗"
-              className="w-full bg-gray-50 rounded-2xl px-4 py-3.5 text-sm font-medium border-0 outline-none"
               required
+              maxLength={24}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-extrabold text-gray-700 mb-2">选择图标</label>
-            <div className="flex flex-wrap gap-3">
-              {TASK_ICONS.map(i => (
-                <button
+            <label className="block text-xs font-bold text-ink-muted mb-2">选择图标</label>
+            <div className="flex flex-wrap gap-2">
+              {TASK_ICONS.map((i) => (
+                <motion.button
                   key={i}
                   type="button"
                   onClick={() => setIcon(i)}
-                  className={`w-11 h-11 text-2xl rounded-xl flex items-center justify-center transition-all ${icon === i ? 'bg-rose-100 ring-2 ring-rose-400 scale-110' : 'bg-gray-50'}`}
+                  whileTap={{ scale: 0.9 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 22 }}
+                  className={`w-11 h-11 text-2xl rounded-button flex items-center justify-center transition-colors ${
+                    icon === i
+                      ? 'bg-brand-soft ring-2 ring-brand scale-110'
+                      : 'bg-bg-base'
+                  }`}
                 >
                   {i}
-                </button>
+                </motion.button>
               ))}
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-extrabold text-gray-700 mb-2">
-              悬赏积分: <span className="text-rose-500">{reward} 分</span>
+            <label className="block text-xs font-bold text-ink-muted mb-2">
+              悬赏金币：<span className="text-brand-ink">{reward}</span>
             </label>
             <input
               type="range"
@@ -77,28 +99,35 @@ export default function TaskCreateOverlay() {
               max={500}
               step={10}
               value={reward}
-              onChange={e => setReward(Number(e.target.value))}
-              className="w-full accent-rose-500"
+              onChange={(e) => setReward(Number(e.target.value))}
+              className="w-full accent-[var(--brand-primary)]"
             />
-            <div className="flex justify-between text-xs text-gray-400 mt-1 font-medium">
-              <span>10</span><span>500</span>
+            <div className="flex justify-between text-[11px] text-ink-muted mt-1 font-medium">
+              <span>10</span>
+              <span>500</span>
             </div>
+            <p className="text-[11px] text-ink-muted mt-2 leading-relaxed">
+              📊 {sampleCount > 0
+                ? `参考：你最近 ${sampleCount} 次完成任务的奖励中位数 ${baseline} 金币`
+                : `还没完成过任务，默认基线 ${baseline} 金币`}
+            </p>
           </div>
-        </div>
+        </Card>
 
-        <div className="bg-yellow-50 p-4 rounded-2xl border-2 border-yellow-200">
-          <p className="text-sm font-bold text-yellow-800">
-            {icon} {title || '任务名称'} · 悬赏 <span className="text-yellow-600">{reward} 积分</span>
+        <Card padding="md" tone="accent" className="border-brand-accent">
+          <p className="text-sm font-bold text-brand-ink flex items-center gap-1.5">
+            <span className="text-2xl">{icon}</span>
+            <span>{title || '任务名称'}</span>
+            <span className="ml-auto inline-flex items-center gap-1">
+              <Coins size={14} /> {reward}
+            </span>
           </p>
-        </div>
+        </Card>
 
-        <button
-          type="submit"
-          className="w-full bg-gray-900 text-white font-black text-lg py-4 rounded-2xl shadow-lg active:scale-95 transition-transform"
-        >
+        <Button type="submit" fullWidth size="lg" disabled={!title.trim() || reward <= 0}>
           发布任务 🚀
-        </button>
+        </Button>
       </form>
-    </div>
+    </motion.div>
   );
 }

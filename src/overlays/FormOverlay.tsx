@@ -1,8 +1,17 @@
 import { useState } from 'react';
-import { XCircle, HeartHandshake } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { X, HeartHandshake } from 'lucide-react';
 import { useAppState, useAppDispatch, useToast } from '../context/AppContext';
 import { APPROVAL_TEMPLATES } from '../constants';
 import type { Approval, ApprovalTemplate } from '../types';
+import { Card, Button, Input, Textarea, IconButton } from '../components/ui';
+
+const templateMeta: Record<ApprovalTemplate, { emoji: string; label: string }> = {
+  basketball: { emoji: '🏀', label: '打球申请' },
+  shopping: { emoji: '🛍️', label: '购物报备' },
+  truce: { emoji: '🏳️', label: '赛博休战' },
+  custom: { emoji: '📝', label: '自定义申请' },
+};
 
 export default function FormOverlay() {
   const { overlayPayload } = useAppState();
@@ -11,6 +20,7 @@ export default function FormOverlay() {
 
   const template = (overlayPayload?.template as ApprovalTemplate) ?? 'custom';
   const defaults = APPROVAL_TEMPLATES[template];
+  const meta = templateMeta[template];
 
   const [reason, setReason] = useState(defaults.reason);
   const [datetime, setDatetime] = useState(defaults.datetime);
@@ -31,88 +41,83 @@ export default function FormOverlay() {
     };
     dispatch({ type: 'SUBMIT_APPROVAL', approval });
     dispatch({ type: 'CLOSE_OVERLAY' });
-    showToast('🚀 奏折已呈交！等待老婆审批');
+    showToast('🚀 申请已提交！等待对方审批');
   }
 
-  const templateMeta: Record<ApprovalTemplate, { emoji: string; color: string }> = {
-    basketball: { emoji: '🏀', color: 'text-orange-500' },
-    shopping: { emoji: '🛍️', color: 'text-blue-500' },
-    truce: { emoji: '🏳️', color: 'text-green-500' },
-    custom: { emoji: '📝', color: 'text-rose-500' },
-  };
-  const meta = templateMeta[template];
-
   return (
-    <div className="absolute inset-0 z-40 bg-white animate-slide-up flex flex-col h-full overflow-y-auto">
-      <div className="flex-1 pb-24 bg-rose-50/30">
-        <div className="bg-white/80 backdrop-blur-md px-6 pt-10 pb-4 sticky top-0 z-10 border-b border-rose-100 flex items-center">
-          <button onClick={() => dispatch({ type: 'CLOSE_OVERLAY' })} className="text-gray-400 p-2 -ml-2">
-            <XCircle size={26} />
-          </button>
-          <h1 className="text-xl font-black text-rose-900 ml-2">
-            <span className={meta.color}>{meta.emoji}</span> 起草奏折
-          </h1>
-        </div>
+    <motion.div
+      initial={{ y: '100%', opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      exit={{ y: '100%', opacity: 0 }}
+      transition={{ type: 'spring', stiffness: 320, damping: 32 }}
+      className="absolute inset-0 z-40 bg-bg-base flex flex-col h-full overflow-y-auto"
+    >
+      <div className="bg-bg-elevated/85 backdrop-blur-md px-5 pt-10 pb-3 sticky top-0 z-10 border-b border-line-subtle flex items-center gap-2">
+        <IconButton
+          ariaLabel="关闭"
+          onClick={() => dispatch({ type: 'CLOSE_OVERLAY' })}
+          variant="ghost"
+          size="md"
+        >
+          <X size={20} />
+        </IconButton>
+        <h1 className="text-lg font-bold text-ink-primary">
+          <span className="mr-1">{meta.emoji}</span>
+          起草申请 · {meta.label}
+        </h1>
+      </div>
 
-        <form onSubmit={handleSubmit} className="px-6 py-6 space-y-5">
-          <div className="bg-white p-6 rounded-3xl shadow-sm border-2 border-rose-50 space-y-4">
-            {template === 'custom' && (
-              <div>
-                <label className="block text-sm font-extrabold text-gray-700 mb-2">申请标题</label>
-                <input
-                  type="text"
-                  value={title}
-                  onChange={e => setTitle(e.target.value)}
-                  placeholder="例如：周末外出打球"
-                  className="w-full bg-gray-50 rounded-2xl px-4 py-3.5 text-sm font-medium border-0 outline-none"
-                  required
-                />
-              </div>
-            )}
+      <form onSubmit={handleSubmit} className="px-5 py-5 space-y-4 pb-24">
+        <Card ornate padding="lg" tone="surface" className="space-y-4">
+          {template === 'custom' && (
             <div>
-              <label className="block text-sm font-extrabold text-gray-700 mb-2">事由</label>
-              <input
-                type="text"
-                value={reason}
-                onChange={e => setReason(e.target.value)}
-                placeholder="说明具体原因..."
-                className="w-full bg-gray-50 rounded-2xl px-4 py-3.5 text-sm font-medium border-0 outline-none"
+              <label className="block text-xs font-bold text-ink-muted mb-2">
+                申请标题
+              </label>
+              <Input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="例如：周末外出打球"
                 required
               />
             </div>
-            <div>
-              <label className="block text-sm font-extrabold text-gray-700 mb-2">时间</label>
-              <input
-                type="datetime-local"
-                value={datetime}
-                onChange={e => setDatetime(e.target.value)}
-                className="w-full bg-gray-50 rounded-2xl px-4 py-3.5 text-sm font-medium border-0 outline-none"
-              />
-            </div>
-          </div>
-
-          <div className="bg-rose-50 p-6 rounded-3xl border-2 border-rose-200">
-            <label className="block text-sm font-black text-rose-600 mb-3 flex items-center gap-1.5">
-              <HeartHandshake size={18} /> 我的诚意 (保命必填)
-            </label>
-            <textarea
-              rows={3}
-              value={sincerity}
-              onChange={e => setSincerity(e.target.value)}
-              placeholder="许诺一些甜头，提高通过率..."
-              className="w-full bg-white rounded-2xl px-4 py-3 text-sm text-rose-900 font-medium border-0 outline-none resize-none"
+          )}
+          <div>
+            <label className="block text-xs font-bold text-ink-muted mb-2">事由</label>
+            <Input
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="说明具体原因..."
               required
             />
           </div>
+          <div>
+            <label className="block text-xs font-bold text-ink-muted mb-2">时间</label>
+            <Input
+              type="datetime-local"
+              value={datetime}
+              onChange={(e) => setDatetime(e.target.value)}
+            />
+          </div>
+        </Card>
 
-          <button
-            type="submit"
-            className="w-full bg-rose-500 text-white font-black text-lg py-4 rounded-2xl shadow-lg shadow-rose-200 active:scale-95 transition-transform"
-          >
-            呈交闻示 📮
-          </button>
-        </form>
-      </div>
-    </div>
+        <Card padding="lg" tone="accent" className="border-brand-accent">
+          <label className="flex items-center gap-1.5 text-sm font-bold text-brand-ink mb-2">
+            <HeartHandshake size={16} /> 我的诚意（保命必填）
+          </label>
+          <Textarea
+            rows={3}
+            value={sincerity}
+            onChange={(e) => setSincerity(e.target.value)}
+            placeholder="许诺一些甜头，提高通过率..."
+            required
+          />
+        </Card>
+
+        <Button type="submit" fullWidth size="lg">
+          提交申请 📮
+        </Button>
+      </form>
+    </motion.div>
   );
 }

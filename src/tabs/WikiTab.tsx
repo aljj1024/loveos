@@ -46,8 +46,14 @@ export default function WikiTab() {
     showToast('🎉 已认领！准备给 TA 一个惊喜');
   }
 
-  const isWife = currentUser === 'wife';
-  const wishlistTitle = isWife ? '我的许愿池' : '她的许愿池';
+  // Wishlist is now per-profile: each side owns their own.
+  // Filter by activeProfileId; legacy items without addedBy default to wife.
+  const visibleWishlist = wishlist.filter(
+    (w) => (w.addedBy ?? 'wife') === activeProfileId
+  );
+  const isOwnProfile = activeProfileId === currentUser;
+  const profileOwnerName = activeProfile?.displayName ?? (activeProfileId === 'wife' ? '老婆' : '老公');
+  const wishlistTitle = isOwnProfile ? '我的许愿池' : `${profileOwnerName}的许愿池`;
 
   return (
     <motion.div
@@ -154,7 +160,7 @@ export default function WikiTab() {
             <h2 className="text-ink-primary font-bold flex items-center gap-2">
               <Gift size={18} className="text-brand-ink" /> {wishlistTitle}
             </h2>
-            {isWife && (
+            {isOwnProfile && (
               <button
                 onClick={() => setAddingWish((v) => !v)}
                 className="text-xs font-bold text-brand-ink flex items-center gap-1"
@@ -165,7 +171,7 @@ export default function WikiTab() {
           </div>
 
           <AnimatePresence>
-            {isWife && addingWish && (
+            {isOwnProfile && addingWish && (
               <motion.div
                 initial={{ opacity: 0, y: -8 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -223,18 +229,22 @@ export default function WikiTab() {
             )}
           </AnimatePresence>
 
-          {wishlist.length === 0 && !addingWish && (
+          {visibleWishlist.length === 0 && !addingWish && (
             <Card padding="lg" tone="surface">
               <EmptyState
                 icon="🌱"
                 title="许愿池是空的"
-                description={isWife ? '添加第一个心愿吧' : '等老婆添加心愿吧'}
+                description={
+                  isOwnProfile
+                    ? '添加第一个心愿吧'
+                    : `等 ${profileOwnerName} 添加心愿吧`
+                }
               />
             </Card>
           )}
 
           <div className="space-y-2.5">
-            {wishlist.map((item) => (
+            {visibleWishlist.map((item) => (
               <Card
                 key={item.id}
                 padding="md"
@@ -260,12 +270,12 @@ export default function WikiTab() {
                   </div>
                 </div>
                 <div className="flex flex-col gap-1.5 items-end">
-                  {!isWife && !item.claimedBy && (
+                  {!isOwnProfile && !item.claimedBy && (
                     <Button size="sm" onClick={() => handleClaim(item.id)}>
                       我来认领
                     </Button>
                   )}
-                  {isWife && (
+                  {isOwnProfile && (
                     <button
                       onClick={() => {
                         dispatch({ type: 'REMOVE_WISHLIST_ITEM', id: item.id });

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, Moon, Sun } from 'lucide-react';
+import { ChevronRight, Moon, Sun, Repeat } from 'lucide-react';
 import GlobalHeader from '../components/GlobalHeader';
 import { useAppState, useAppDispatch, useToast, useCurrentMood } from '../context/AppContext';
 import { useMoodTimer } from '../hooks/useMoodTimer';
@@ -8,7 +8,7 @@ import { DEFAULT_MOODS } from '../constants';
 import { Card } from '../components/ui';
 
 export default function ProfileTab() {
-  const { points, currentUser, wikiProfiles } = useAppState();
+  const { points, currentUser, wikiProfiles, flipMode } = useAppState();
   const dispatch = useAppDispatch();
   const showToast = useToast();
   const currentMood = useCurrentMood();
@@ -155,6 +155,79 @@ export default function ProfileTab() {
           </div>
           <p className="text-xs text-ink-muted mt-3">在「宝物」中接任务赚取金币，或在商店兑换特权</p>
         </Card>
+
+        {/* 倒反天罡 toggle (special game-mode card) */}
+        <motion.button
+          onClick={() => {
+            dispatch({ type: 'TOGGLE_FLIP_MODE' });
+            showToast(flipMode ? '🌅 已恢复正常秩序' : '🔄 倒反天罡，角色互换！');
+          }}
+          whileTap={{ scale: 0.98 }}
+          transition={{ type: 'spring', stiffness: 380, damping: 22 }}
+          className={`relative overflow-hidden w-full rounded-card p-4 flex items-center justify-between text-left transition-colors ${
+            flipMode
+              ? 'bg-gradient-to-r from-brand to-brand-ink text-white'
+              : 'bg-bg-surface border border-line-subtle text-ink-primary'
+          }`}
+          style={
+            flipMode
+              ? {
+                  boxShadow:
+                    '0 8px 24px -6px rgba(167,139,250,0.55), inset 0 1px 0 rgba(255,255,255,0.35)',
+                }
+              : undefined
+          }
+        >
+          {flipMode && (
+            <div
+              aria-hidden
+              className="absolute inset-0 opacity-30 pointer-events-none"
+              style={{
+                background:
+                  'linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.3) 50%, transparent 70%)',
+              }}
+            />
+          )}
+          <div className="relative flex items-center gap-3">
+            <div
+              className={`w-10 h-10 rounded-pill flex items-center justify-center ${
+                flipMode ? 'bg-white/25 text-white' : 'bg-brand-soft text-brand-ink'
+              }`}
+            >
+              <motion.div
+                animate={{ rotate: flipMode ? 180 : 0 }}
+                transition={{ type: 'spring', stiffness: 220, damping: 18 }}
+              >
+                <Repeat size={18} />
+              </motion.div>
+            </div>
+            <div>
+              <div className="text-sm font-bold">倒反天罡模式</div>
+              <div
+                className={`text-xs mt-0.5 font-semibold ${
+                  flipMode ? 'text-white/85' : 'text-ink-muted'
+                }`}
+              >
+                {flipMode
+                  ? '🔄 角色已翻转 · 老婆下苦差，老公做审批'
+                  : '开启后角色互换，老婆也能赚金币'}
+              </div>
+            </div>
+          </div>
+          <div
+            className={`relative ml-2 w-10 h-6 rounded-pill p-0.5 flex-shrink-0 ${
+              flipMode ? 'bg-white/30' : 'bg-line-subtle'
+            }`}
+          >
+            <motion.div
+              layout
+              transition={{ type: 'spring', stiffness: 380, damping: 26 }}
+              className={`w-5 h-5 rounded-pill ${
+                flipMode ? 'bg-white ml-auto' : 'bg-bg-elevated'
+              }`}
+            />
+          </div>
+        </motion.button>
 
         {/* Settings rows */}
         <div className="space-y-2.5">

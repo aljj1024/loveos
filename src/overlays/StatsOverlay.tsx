@@ -1,5 +1,7 @@
-import { ChevronRight } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { ChevronLeft } from 'lucide-react';
 import { useAppState, useAppDispatch } from '../context/AppContext';
+import { Card, Badge, IconButton, EmptyState } from '../components/ui';
 
 export default function StatsOverlay() {
   const { ledger, approvals, points, overlayPayload } = useAppState();
@@ -7,97 +9,144 @@ export default function StatsOverlay() {
 
   const mode = (overlayPayload?.mode as string) ?? 'stats';
 
-  const totalEarned = ledger.filter(e => e.amount > 0).reduce((s, e) => s + e.amount, 0);
-  const totalSpent = ledger.filter(e => e.amount < 0).reduce((s, e) => s + Math.abs(e.amount), 0);
+  const totalEarned = ledger.filter((e) => e.amount > 0).reduce((s, e) => s + e.amount, 0);
+  const totalSpent = ledger
+    .filter((e) => e.amount < 0)
+    .reduce((s, e) => s + Math.abs(e.amount), 0);
 
-  const approvalHistory = approvals.filter(a => a.status !== 'pending');
+  const approvalHistory = approvals.filter((a) => a.status !== 'pending');
 
-  const statusLabel: Record<string, string> = {
-    approved: '✅ 已准奏',
-    rejected: '❌ 已驳回',
-    conditional: '🧹 条件通过',
+  const statusConfig: Record<
+    string,
+    { label: string; tone: 'success' | 'neutral' | 'warning' }
+  > = {
+    approved: { label: '✅ 已通过', tone: 'success' },
+    rejected: { label: '❌ 已驳回', tone: 'neutral' },
+    conditional: { label: '🧹 条件通过', tone: 'warning' },
   };
 
   return (
-    <div className="absolute inset-0 z-40 bg-white animate-slide-up flex flex-col h-full overflow-y-auto">
-      <div className="bg-white/80 backdrop-blur-md px-6 pt-10 pb-4 sticky top-0 z-10 border-b border-gray-100 flex items-center">
-        <button onClick={() => dispatch({ type: 'CLOSE_OVERLAY' })} className="text-gray-400 p-2 -ml-2">
-          <ChevronRight size={26} className="rotate-180" />
-        </button>
-        <h1 className="text-xl font-black text-gray-800 ml-2">
-          {mode === 'history' ? '审批历史记录' : '积分统计'}
+    <motion.div
+      initial={{ y: '100%', opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      exit={{ y: '100%', opacity: 0 }}
+      transition={{ type: 'spring', stiffness: 320, damping: 32 }}
+      className="absolute inset-0 z-40 bg-bg-base flex flex-col h-full overflow-y-auto"
+    >
+      <div className="bg-bg-elevated/85 backdrop-blur-md px-5 pt-10 pb-3 sticky top-0 z-10 border-b border-line-subtle flex items-center gap-2">
+        <IconButton
+          ariaLabel="关闭"
+          onClick={() => dispatch({ type: 'CLOSE_OVERLAY' })}
+          variant="ghost"
+          size="md"
+        >
+          <ChevronLeft size={20} />
+        </IconButton>
+        <h1 className="text-lg font-bold text-ink-primary">
+          {mode === 'history' ? '历史申请记录' : '金币统计'}
         </h1>
       </div>
 
-      <div className="px-6 py-6 space-y-6">
+      <div className="px-5 py-5 space-y-5 pb-24">
         {mode === 'stats' && (
           <>
-            <div className="grid grid-cols-3 gap-3">
-              <div className="bg-green-50 p-4 rounded-2xl text-center border-2 border-green-100">
-                <div className="font-black text-2xl text-green-600">+{totalEarned}</div>
-                <div className="text-xs text-green-500 font-bold mt-1">总收入</div>
-              </div>
-              <div className="bg-red-50 p-4 rounded-2xl text-center border-2 border-red-100">
-                <div className="font-black text-2xl text-red-500">-{totalSpent}</div>
-                <div className="text-xs text-red-400 font-bold mt-1">总支出</div>
-              </div>
-              <div className="bg-rose-50 p-4 rounded-2xl text-center border-2 border-rose-100">
-                <div className="font-black text-2xl text-rose-600">{points}</div>
-                <div className="text-xs text-rose-400 font-bold mt-1">当前余额</div>
-              </div>
+            <div className="grid grid-cols-3 gap-2.5">
+              <Card padding="md" tone="surface" className="text-center">
+                <div className="font-black text-2xl text-state-success">+{totalEarned}</div>
+                <div className="text-xs text-ink-muted font-bold mt-1">总收入</div>
+              </Card>
+              <Card padding="md" tone="surface" className="text-center">
+                <div className="font-black text-2xl text-state-danger">-{totalSpent}</div>
+                <div className="text-xs text-ink-muted font-bold mt-1">总支出</div>
+              </Card>
+              <Card ornate padding="md" tone="surface" className="text-center">
+                <div className="font-black text-2xl text-brand-ink">{points}</div>
+                <div className="text-xs text-ink-muted font-bold mt-1">当前余额</div>
+              </Card>
             </div>
 
             <div>
-              <h3 className="font-extrabold text-gray-700 mb-3">最近流水</h3>
-              {ledger.length === 0 && (
-                <p className="text-center text-gray-400 text-sm py-8">还没有积分记录哦</p>
-              )}
-              <div className="space-y-2">
-                {ledger.slice(0, 20).map(entry => (
-                  <div key={entry.id} className="bg-gray-50 px-4 py-3 rounded-2xl flex items-center justify-between">
-                    <div>
-                      <div className="text-sm font-bold text-gray-800">{entry.description}</div>
-                      <div className="text-xs text-gray-400 mt-0.5">
-                        {new Date(entry.timestamp).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+              <h3 className="font-bold text-ink-primary mb-2">最近流水</h3>
+              {ledger.length === 0 ? (
+                <Card padding="lg" tone="surface">
+                  <EmptyState icon="📭" title="还没有金币流水" />
+                </Card>
+              ) : (
+                <div className="space-y-2">
+                  {ledger.slice(0, 20).map((entry) => (
+                    <Card
+                      key={entry.id}
+                      padding="md"
+                      tone="surface"
+                      className="flex items-center justify-between"
+                    >
+                      <div>
+                        <div className="text-sm font-bold text-ink-primary">
+                          {entry.description}
+                        </div>
+                        <div className="text-xs text-ink-muted mt-0.5">
+                          {new Date(entry.timestamp).toLocaleString('zh-CN', {
+                            month: 'numeric',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </div>
                       </div>
-                    </div>
-                    <div className={`font-black text-lg ${entry.amount > 0 ? 'text-green-500' : 'text-red-400'}`}>
-                      {entry.amount > 0 ? '+' : ''}{entry.amount}
-                    </div>
-                  </div>
-                ))}
-              </div>
+                      <div
+                        className={`font-black text-lg ${
+                          entry.amount > 0 ? 'text-state-success' : 'text-state-danger'
+                        }`}
+                      >
+                        {entry.amount > 0 ? '+' : ''}
+                        {entry.amount}
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </div>
           </>
         )}
 
         {mode === 'history' && (
           <div>
-            {approvalHistory.length === 0 && (
-              <p className="text-center text-gray-400 text-sm py-16">还没有处理过的奏折哦</p>
+            {approvalHistory.length === 0 ? (
+              <Card padding="lg" tone="surface">
+                <EmptyState icon="📭" title="还没有处理过的申请" />
+              </Card>
+            ) : (
+              <div className="space-y-2.5">
+                {approvalHistory.map((a) => {
+                  const cfg = statusConfig[a.status];
+                  return (
+                    <Card key={a.id} padding="md" tone="surface">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <div className="font-bold text-ink-primary text-sm">{a.title}</div>
+                        {cfg && <Badge tone={cfg.tone}>{cfg.label}</Badge>}
+                      </div>
+                      <div className="text-xs text-ink-muted font-medium">{a.reason}</div>
+                      {a.conditionText && (
+                        <div className="mt-2 text-xs text-state-warning bg-state-warning/15 rounded-button px-3 py-1.5 font-bold">
+                          条件：{a.conditionText}
+                        </div>
+                      )}
+                      <div className="text-[11px] text-ink-muted mt-2">
+                        {new Date(a.resolvedAt!).toLocaleString('zh-CN', {
+                          month: 'numeric',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </div>
+                    </Card>
+                  );
+                })}
+              </div>
             )}
-            <div className="space-y-3">
-              {approvalHistory.map(a => (
-                <div key={a.id} className="bg-white p-4 rounded-2xl border-2 border-gray-100 shadow-sm">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="font-extrabold text-gray-800 text-sm">{a.title}</div>
-                    <span className="text-xs font-bold">{statusLabel[a.status] ?? a.status}</span>
-                  </div>
-                  <div className="text-xs text-gray-400 font-medium">{a.reason}</div>
-                  {a.conditionText && (
-                    <div className="mt-2 text-xs text-orange-600 bg-orange-50 rounded-lg px-3 py-1.5 font-bold">
-                      条件：{a.conditionText}
-                    </div>
-                  )}
-                  <div className="text-xs text-gray-300 mt-2">
-                    {new Date(a.resolvedAt!).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }
