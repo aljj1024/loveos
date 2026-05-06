@@ -1,0 +1,67 @@
+/* LoveOS HoYoLAB-style theme tokens.
+   Light = default. html.dark overrides. */
+
+:root {
+  --bg-base: #FAFAFB;
+  --bg-surface: #FFFFFF;
+  --bg-elevated: #FFFFFF;
+  --bg-overlay: rgba(15, 12, 30, 0.45);
+
+  --text-primary: #1F1B2E;
+  --text-secondary: #4A4360;
+  --text-muted: #8A85A0;
+  --text-on-brand: #FFFFFF;
+
+  --brand-primary: #A78BFA;
+  --brand-primary-soft: #EDE5FF;
+  --brand-accent: #FBCFE8;
+  --brand-accent-soft: #FFF1F8;
+  --brand-ink: #6D4FE0;
+
+  --border-subtle: #EFECF7;
+  --border-strong: #1F1B2E;
+
+  --success: #4ADE80;
+  --warning: #FBBF24;
+  --danger: #F87171;
+  --info: #60A5FA;
+
+  --radius-card: 20px;
+  --radius-button: 14px;
+  --radius-pill: 999px;
+  --radius-shell: 40px;
+
+  --shadow-card: 0 4px 14px -4px rgba(167, 139, 250, 0.12), 0 2px 6px -2px rgba(31, 27, 46, 0.04);
+  --shadow-elevated: 0 12px 30px -10px rgba(167, 139, 250, 0.25);
+  --shadow-nav: 0 -10px 30px rgba(167, 139, 250, 0.12);
+
+  /* Game-HUD micro pattern */
+  --pattern-dots: radial-gradient(circle at 1px 1px, rgba(167, 139, 250, 0.10) 1px, transparent 0);
+  --pattern-size: 18px 18px;
+}
+
+html.dark {
+  --bg-base: #14111E;
+  --bg-surface: #1F1B2E;
+  --bg-elevated: #2A2640;
+  --bg-overlay: rgba(0, 0, 0, 0.55);
+
+  --text-primary: #F4F1FB;
+  --text-secondary: #B5AFC9;
+  --text-muted: #6E6885;
+
+  --brand-primary: #B49DFB;
+  --brand-primary-soft: #2D2546;
+  --brand-accent: #F4B8DA;
+  --brand-accent-soft: #3B233A;
+  --brand-ink: #DBC9FF;
+
+  --border-subtle: #2D2742;
+  --border-strong: #4A4360;
+
+  --shadow-card: 0 4px 14px -4px rgba(0, 0, 0, 0.45), 0 2px 6px -2px rgba(0, 0, 0, 0.25);
+  --shadow-elevated: 0 12px 30px -10px rgba(0, 0, 0, 0.6);
+  --shadow-nav: 0 -10px 30px rgba(0, 0, 0, 0.35);
+
+  --pattern-dots: radial-gradient(circle at 1px 1px, rgba(180, 157, 251, 0.10) 1px, transparent 0);
+}

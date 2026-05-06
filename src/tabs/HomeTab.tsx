@@ -1,6 +1,18 @@
+import { motion } from 'framer-motion';
 import { ShoppingBag, ShieldAlert, ChevronRight, PlusCircle, ClipboardList } from 'lucide-react';
 import GlobalHeader from '../components/GlobalHeader';
 import { useAppState, useAppDispatch, useToast } from '../context/AppContext';
+import { Card, Badge, EmptyState, Button } from '../components/ui';
+
+const statusBadge: Record<
+  string,
+  { label: string; tone: 'brand' | 'success' | 'warning' | 'neutral' }
+> = {
+  pending: { label: '待审批', tone: 'brand' },
+  approved: { label: '已通过', tone: 'success' },
+  rejected: { label: '已驳回', tone: 'neutral' },
+  conditional: { label: '条件通过', tone: 'warning' },
+};
 
 export default function HomeTab() {
   const { approvals, vouchers, currentUser } = useAppState();
@@ -8,210 +20,282 @@ export default function HomeTab() {
   const showToast = useToast();
 
   const pendingVoucherConfirms = vouchers.filter(
-    v => v.pendingRedemption && v.purchasedBy !== currentUser,
+    (v) => v.pendingRedemption && v.purchasedBy !== currentUser
   );
 
   const isWife = currentUser === 'wife';
 
-  // Wife sees pending approvals submitted by others (husband)
-  // Husband sees his own submitted approvals
-  const incomingApprovals = approvals.filter(a => a.status === 'pending' && a.submittedBy !== 'wife');
-  const myApprovals = approvals.filter(a => a.submittedBy === currentUser).slice(0, 5);
-
-  const statusBadge: Record<string, { label: string; classes: string }> = {
-    pending: { label: '待审批', classes: 'bg-rose-100 text-rose-600' },
-    approved: { label: '已准奏', classes: 'bg-green-100 text-green-600' },
-    rejected: { label: '已驳回', classes: 'bg-gray-100 text-gray-500' },
-    conditional: { label: '条件通过', classes: 'bg-orange-100 text-orange-600' },
-  };
+  const incomingApprovals = approvals.filter(
+    (a) => a.status === 'pending' && a.submittedBy !== 'wife'
+  );
+  const myApprovals = approvals.filter((a) => a.submittedBy === currentUser).slice(0, 5);
 
   return (
-    <div className="flex-1 overflow-y-auto bg-rose-50/50 pb-24 animate-fade-in">
-      <GlobalHeader title="LoveOS" subtitle={isWife ? '今天也是慈悲的老婆大人 👑' : '今天也是努力搬砖养家的一天 ☀️'} />
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="flex-1 overflow-y-auto bg-bg-base pb-24"
+    >
+      <GlobalHeader
+        title="任务"
+        subtitle={isWife ? '今天也是温柔的老婆 👑' : '今天也是努力搬砖的一天 ☀️'}
+      />
 
-      {/* 快捷操作 */}
-      <div className="px-6 py-6">
-        <h2 className="text-rose-900 font-extrabold mb-4 flex items-center gap-2 text-lg">
-          <span className="bg-white text-rose-500 p-1.5 rounded-xl shadow-sm">✨</span>
-          {isWife ? '审批奏折' : '快捷奏折'}
+      <div className="px-5 py-5">
+        <h2 className="text-ink-primary font-bold mb-3 flex items-center gap-2 text-base">
+          <span className="bg-brand-soft text-brand-ink p-1.5 rounded-button">✨</span>
+          {isWife ? '审批中心' : '快速发起'}
         </h2>
 
         {isWife ? (
-          /* Wife: quick access to review queue + approval history */
-          <div className="grid grid-cols-2 gap-4">
-            <button
-              onClick={() => dispatch({ type: 'OPEN_OVERLAY', overlay: 'approvalHistory', payload: { mode: 'history' } })}
-              className="bg-white p-4 rounded-3xl shadow-sm flex flex-col items-center gap-3 active:scale-95 transition-transform border-2 border-rose-50 col-span-2"
-            >
-              <div className="w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center text-rose-500 shadow-inner">
-                <ClipboardList size={24} />
-              </div>
-              <span className="text-xs font-bold text-gray-700">查看所有审批记录</span>
-            </button>
-          </div>
+          <Card
+            hoverable
+            padding="lg"
+            tone="surface"
+            onClick={() =>
+              dispatch({
+                type: 'OPEN_OVERLAY',
+                overlay: 'approvalHistory',
+                payload: { mode: 'history' },
+              })
+            }
+            className="cursor-pointer flex flex-col items-center gap-2"
+          >
+            <div className="w-12 h-12 bg-brand-soft rounded-pill flex items-center justify-center text-brand-ink">
+              <ClipboardList size={22} />
+            </div>
+            <span className="text-sm font-bold text-ink-primary">查看所有申请记录</span>
+          </Card>
         ) : (
-          /* Husband: submit approval templates */
-          <div className="grid grid-cols-3 gap-4">
-            <button
-              onClick={() => dispatch({ type: 'OPEN_OVERLAY', overlay: 'form', payload: { template: 'basketball' } })}
-              className="bg-white p-4 rounded-3xl shadow-sm flex flex-col items-center gap-3 active:scale-95 transition-transform border-2 border-rose-50"
+          <div className="grid grid-cols-3 gap-3">
+            <motion.button
+              onClick={() =>
+                dispatch({ type: 'OPEN_OVERLAY', overlay: 'form', payload: { template: 'basketball' } })
+              }
+              whileTap={{ scale: 0.95 }}
+              transition={{ type: 'spring', stiffness: 380, damping: 22 }}
+              className="bg-bg-surface p-3 rounded-card shadow-card border border-line-subtle flex flex-col items-center gap-2"
             >
-              <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center shadow-inner text-2xl">🏀</div>
-              <span className="text-xs font-bold text-gray-700">打球申请</span>
-            </button>
-            <button
-              onClick={() => dispatch({ type: 'OPEN_OVERLAY', overlay: 'form', payload: { template: 'shopping' } })}
-              className="bg-white p-4 rounded-3xl shadow-sm flex flex-col items-center gap-3 active:scale-95 transition-transform border-2 border-rose-50"
-            >
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-500 shadow-inner">
-                <ShoppingBag size={24} />
+              <div className="w-11 h-11 bg-brand-accent-soft rounded-pill flex items-center justify-center text-2xl">
+                🏀
               </div>
-              <span className="text-xs font-bold text-gray-700">购物报备</span>
-            </button>
-            <button
-              onClick={() => dispatch({ type: 'OPEN_OVERLAY', overlay: 'form', payload: { template: 'truce' } })}
-              className="bg-white p-4 rounded-3xl shadow-sm flex flex-col items-center gap-3 active:scale-95 transition-transform border-2 border-rose-50"
+              <span className="text-xs font-bold text-ink-primary">打球申请</span>
+            </motion.button>
+            <motion.button
+              onClick={() =>
+                dispatch({ type: 'OPEN_OVERLAY', overlay: 'form', payload: { template: 'shopping' } })
+              }
+              whileTap={{ scale: 0.95 }}
+              transition={{ type: 'spring', stiffness: 380, damping: 22 }}
+              className="bg-bg-surface p-3 rounded-card shadow-card border border-line-subtle flex flex-col items-center gap-2"
             >
-              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-500 shadow-inner">
-                <ShieldAlert size={24} />
+              <div className="w-11 h-11 bg-state-info/15 rounded-pill flex items-center justify-center text-state-info">
+                <ShoppingBag size={22} />
               </div>
-              <span className="text-xs font-bold text-gray-700">赛博休战</span>
-            </button>
+              <span className="text-xs font-bold text-ink-primary">购物报备</span>
+            </motion.button>
+            <motion.button
+              onClick={() =>
+                dispatch({ type: 'OPEN_OVERLAY', overlay: 'form', payload: { template: 'truce' } })
+              }
+              whileTap={{ scale: 0.95 }}
+              transition={{ type: 'spring', stiffness: 380, damping: 22 }}
+              className="bg-bg-surface p-3 rounded-card shadow-card border border-line-subtle flex flex-col items-center gap-2"
+            >
+              <div className="w-11 h-11 bg-state-success/15 rounded-pill flex items-center justify-center text-state-success">
+                <ShieldAlert size={22} />
+              </div>
+              <span className="text-xs font-bold text-ink-primary">赛博休战</span>
+            </motion.button>
           </div>
         )}
 
         {!isWife && (
-          <button
-            onClick={() => dispatch({ type: 'OPEN_OVERLAY', overlay: 'form', payload: { template: 'custom' } })}
-            className="mt-3 w-full bg-white/60 border-2 border-dashed border-rose-200 p-3 rounded-2xl flex items-center justify-center gap-2 text-sm font-bold text-rose-400 active:scale-95 transition-transform"
+          <Button
+            onClick={() =>
+              dispatch({ type: 'OPEN_OVERLAY', overlay: 'form', payload: { template: 'custom' } })
+            }
+            variant="secondary"
+            fullWidth
+            className="mt-3 border-2 border-dashed border-brand/40"
           >
-            <PlusCircle size={16} /> 自定义奏折
-          </button>
+            <PlusCircle size={16} /> 自定义申请
+          </Button>
         )}
       </div>
 
-      {/* Pending voucher confirmations — shown to whoever needs to confirm */}
       {pendingVoucherConfirms.length > 0 && (
-        <div className="px-6 mb-2">
-          <h2 className="text-rose-900 font-extrabold mb-3 flex items-center gap-2 text-lg">
-            <span className="bg-white text-orange-500 p-1.5 rounded-xl shadow-sm">✂️</span>
+        <div className="px-5 mb-2">
+          <h2 className="text-ink-primary font-bold mb-3 flex items-center gap-2 text-base">
+            <span className="bg-state-warning/15 text-state-warning p-1.5 rounded-button">✂️</span>
             待核销确认
           </h2>
           <div className="space-y-2">
-            {pendingVoucherConfirms.map(v => (
-              <div key={v.id} className="bg-orange-50 p-4 rounded-2xl border-2 border-orange-200">
+            {pendingVoucherConfirms.map((v) => (
+              <Card key={v.id} padding="md" tone="surface" className="border-state-warning/40">
                 <div className="flex items-center gap-3 mb-3">
                   <span className="text-2xl">{v.itemIcon}</span>
                   <div>
-                    <div className="font-bold text-sm text-gray-800">{v.itemTitle}</div>
-                    <div className="text-xs text-orange-500 font-bold mt-0.5">对方申请核销此凭证</div>
+                    <div className="font-bold text-sm text-ink-primary">{v.itemTitle}</div>
+                    <div className="text-xs text-state-warning font-bold mt-0.5">
+                      对方申请核销此凭证
+                    </div>
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <button
-                    onClick={() => { dispatch({ type: 'CONFIRM_VOUCHER', voucherId: v.id }); showToast('✅ 已确认核销！'); }}
-                    className="flex-1 bg-green-500 text-white text-xs font-black py-2 rounded-xl active:scale-95 transition-transform"
+                  <Button
+                    fullWidth
+                    size="sm"
+                    onClick={() => {
+                      dispatch({ type: 'CONFIRM_VOUCHER', voucherId: v.id });
+                      showToast('✅ 已确认核销！');
+                    }}
+                    className="bg-state-success text-white"
                   >
                     ✅ 确认核销
-                  </button>
-                  <button
-                    onClick={() => { dispatch({ type: 'REJECT_VOUCHER', voucherId: v.id }); showToast('❌ 已拒绝核销'); }}
-                    className="flex-1 bg-gray-200 text-gray-600 text-xs font-black py-2 rounded-xl active:scale-95 transition-transform"
+                  </Button>
+                  <Button
+                    fullWidth
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => {
+                      dispatch({ type: 'REJECT_VOUCHER', voucherId: v.id });
+                      showToast('❌ 已拒绝核销');
+                    }}
                   >
                     ❌ 拒绝
-                  </button>
+                  </Button>
                 </div>
-              </div>
+              </Card>
             ))}
           </div>
         </div>
       )}
 
-      <div className="px-6">
+      <div className="px-5">
         {isWife ? (
-          /* Wife: incoming approvals to review */
           <>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-rose-900 font-extrabold text-lg">待批阅的奏折</h2>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-ink-primary font-bold text-base">待我审批</h2>
               <button
-                onClick={() => dispatch({ type: 'OPEN_OVERLAY', overlay: 'approvalHistory', payload: { mode: 'history' } })}
-                className="text-xs text-rose-400 font-bold flex items-center gap-1"
+                onClick={() =>
+                  dispatch({
+                    type: 'OPEN_OVERLAY',
+                    overlay: 'approvalHistory',
+                    payload: { mode: 'history' },
+                  })
+                }
+                className="text-xs text-brand-ink font-bold flex items-center gap-1"
               >
                 历史记录 <ChevronRight size={14} />
               </button>
             </div>
 
             {incomingApprovals.length === 0 ? (
-              <div className="bg-white rounded-3xl p-8 text-center border-2 border-rose-50 shadow-sm">
-                <div className="text-4xl mb-3">🎉</div>
-                <p className="text-gray-400 font-bold text-sm">暂无待审批的奏折</p>
-                <p className="text-gray-300 text-xs mt-1">老公今天表现不错哦</p>
-              </div>
+              <Card padding="lg" tone="surface">
+                <EmptyState
+                  icon="🎉"
+                  title="暂无待审批的申请"
+                  description="老公今天表现不错"
+                />
+              </Card>
             ) : (
-              <div className="space-y-3">
-                {incomingApprovals.map(app => (
-                  <div
+              <div className="space-y-2.5">
+                {incomingApprovals.map((app) => (
+                  <Card
                     key={app.id}
-                    onClick={() => dispatch({ type: 'OPEN_OVERLAY', overlay: 'approval', payload: { approvalId: app.id } })}
-                    className="bg-white p-5 rounded-3xl shadow-sm border-2 border-rose-50 flex items-center justify-between active:bg-rose-50 transition-colors cursor-pointer"
+                    hoverable
+                    padding="md"
+                    tone="surface"
+                    onClick={() =>
+                      dispatch({
+                        type: 'OPEN_OVERLAY',
+                        overlay: 'approval',
+                        payload: { approvalId: app.id },
+                      })
+                    }
+                    className="cursor-pointer flex items-center justify-between"
                   >
-                    <div className="flex gap-4 items-center">
-                      <div className="w-10 h-10 bg-rose-100 rounded-full flex items-center justify-center text-rose-500 font-bold text-xs">急</div>
+                    <div className="flex gap-3 items-center">
+                      <div className="w-10 h-10 bg-brand-soft rounded-pill flex items-center justify-center text-brand-ink font-bold text-xs">
+                        急
+                      </div>
                       <div>
-                        <h3 className="font-extrabold text-gray-800">{app.title}</h3>
-                        <p className="text-xs text-rose-400 mt-1 font-medium">
-                          {new Date(app.submittedAt).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        <h3 className="font-bold text-ink-primary text-sm">{app.title}</h3>
+                        <p className="text-xs text-ink-muted mt-0.5">
+                          {new Date(app.submittedAt).toLocaleString('zh-CN', {
+                            month: 'numeric',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
                         </p>
                       </div>
                     </div>
-                    <div className="bg-rose-500 text-white p-2 rounded-full shadow-sm">
-                      <ChevronRight size={18} />
+                    <div className="bg-brand text-ink-on-brand p-1.5 rounded-pill">
+                      <ChevronRight size={16} />
                     </div>
-                  </div>
+                  </Card>
                 ))}
               </div>
             )}
           </>
         ) : (
-          /* Husband: my submitted approvals and their status */
           <>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-rose-900 font-extrabold text-lg">我的奏折进度</h2>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-ink-primary font-bold text-base">我的申请进度</h2>
               <button
-                onClick={() => dispatch({ type: 'OPEN_OVERLAY', overlay: 'approvalHistory', payload: { mode: 'history' } })}
-                className="text-xs text-rose-400 font-bold flex items-center gap-1"
+                onClick={() =>
+                  dispatch({
+                    type: 'OPEN_OVERLAY',
+                    overlay: 'approvalHistory',
+                    payload: { mode: 'history' },
+                  })
+                }
+                className="text-xs text-brand-ink font-bold flex items-center gap-1"
               >
                 全部 <ChevronRight size={14} />
               </button>
             </div>
 
             {myApprovals.length === 0 ? (
-              <div className="bg-white rounded-3xl p-8 text-center border-2 border-rose-50 shadow-sm">
-                <div className="text-4xl mb-3">📭</div>
-                <p className="text-gray-400 font-bold text-sm">还没有提交过奏折</p>
-                <p className="text-gray-300 text-xs mt-1">用上方快捷按钮提交申请吧</p>
-              </div>
+              <Card padding="lg" tone="surface">
+                <EmptyState
+                  icon="📭"
+                  title="还没有提交过申请"
+                  description="用上方按钮提交一个吧"
+                />
+              </Card>
             ) : (
-              <div className="space-y-3">
-                {myApprovals.map(app => {
+              <div className="space-y-2.5">
+                {myApprovals.map((app) => {
                   const badge = statusBadge[app.status];
                   const isPending = app.status === 'pending';
                   return (
-                    <div
+                    <Card
                       key={app.id}
-                      className={`bg-white p-4 rounded-2xl border-2 flex items-center justify-between ${isPending ? 'border-rose-100' : 'border-gray-100 opacity-70'}`}
+                      padding="md"
+                      tone="surface"
+                      className={`flex items-center justify-between ${isPending ? '' : 'opacity-70'}`}
                     >
                       <div>
-                        <div className="font-bold text-gray-800 text-sm">{app.title}</div>
-                        <div className="text-xs text-gray-400 mt-1">
-                          {new Date(app.submittedAt).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        <div className="font-bold text-ink-primary text-sm">{app.title}</div>
+                        <div className="text-xs text-ink-muted mt-0.5">
+                          {new Date(app.submittedAt).toLocaleString('zh-CN', {
+                            month: 'numeric',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
                         </div>
                         {app.conditionText && (
-                          <div className="text-xs text-orange-500 font-bold mt-1">📎 条件：{app.conditionText}</div>
+                          <div className="text-xs text-state-warning font-bold mt-1">
+                            📎 条件：{app.conditionText}
+                          </div>
                         )}
                       </div>
-                      <span className={`text-xs font-bold px-2 py-1 rounded-full ${badge?.classes}`}>{badge?.label}</span>
-                    </div>
+                      <Badge tone={badge?.tone ?? 'neutral'}>{badge?.label}</Badge>
+                    </Card>
                   );
                 })}
               </div>
@@ -219,6 +303,6 @@ export default function HomeTab() {
           </>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }

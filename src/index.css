@@ -1,22 +1,46 @@
+@import './styles/theme.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@font-face {
+  font-family: 'MiSans';
+  src: url('https://cdn.jsdelivr.net/npm/misans@4.1.0/lib/Normal/MiSans-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'MiSans';
+  src: url('https://cdn.jsdelivr.net/npm/misans@4.1.0/lib/Normal/MiSans-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'MiSans';
+  src: url('https://cdn.jsdelivr.net/npm/misans@4.1.0/lib/Normal/MiSans-Semibold.woff2') format('woff2');
+  font-weight: 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'MiSans';
+  src: url('https://cdn.jsdelivr.net/npm/misans@4.1.0/lib/Normal/MiSans-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
 
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
-
 @keyframes slideUp {
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
 }
-
 @keyframes fadeInDown {
   from { opacity: 0; transform: translate(-50%, -20px); }
   to { opacity: 1; transform: translate(-50%, 0); }
 }
-
 @keyframes scaleIn {
   from { transform: scale(0.8); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
@@ -32,17 +56,22 @@
   60%  { opacity: 1; transform: translateY(-28px) scale(1.15); }
   100% { opacity: 0; transform: translateY(-48px) scale(0.9); }
 }
-
 .animate-points-fly { animation: pointsFlyUp 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
 * {
   -webkit-tap-highlight-color: transparent;
 }
 
+html {
+  background: var(--bg-base);
+}
+
 body {
   margin: 0;
-  background: #fce7f3;
-  font-family: system-ui, -apple-system, sans-serif;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: 'MiSans', 'PingFang SC', 'HarmonyOS Sans SC', 'Source Han Sans CN', system-ui, -apple-system, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 #root {
