@@ -1,0 +1,43 @@
+name: lifecycle-cron
+
+# 每小时定时调用 Supabase Edge Function `lifecycle-cron`：
+#   - 自动通过超时奏折（auto_approved，"陛下三日未朱批"）
+#   - 自动关闭超时旨意（expired）
+#   - 清空过期分手 couple 数据（dissolution 宽限期满）
+#
+# 副作用——也是设计目标之一：
+#   - 每小时调用 1 次 Supabase = "心跳活动"
+#   - 永远不会再因 Supabase Free Plan "7 天无活动"被自动暂停
+#
+# Manual run: Actions tab → 'lifecycle-cron' → "Run workflow" 手动触发
+on:
+  schedule:
+    # 每小时整点（GitHub Actions cron 实际可能延迟 5-15 分钟，对业务无影响）
+    - cron: '0 * * * *'
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Trigger lifecycle-cron
+        env:
+          CRON_SECRET: ${{ secrets.LIFECYCLE_CRON_SECRET }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::error::LIFECYCLE_CRON_SECRET secret is not set"
+            exit 1
+          fi
+          response=$(curl -fsS -X POST \
+            "https://iniesncqscwppvwpuxia.supabase.co/functions/v1/lifecycle-cron" \
+            -H "x-cron-secret: $CRON_SECRET" \
+            -H "content-type: application/json" \
+            --max-time 30 \
+            -w "\nHTTP_STATUS:%{http_code}\n")
+          echo "$response"
+          status=$(echo "$response" | grep "^HTTP_STATUS:" | cut -d: -f2)
+          if [ "$status" != "200" ]; then
+            echo "::error::Cron returned status $status"
+            exit 1
+          fi
