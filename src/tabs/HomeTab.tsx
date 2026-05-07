@@ -4,6 +4,7 @@ import GlobalHeader from '../components/GlobalHeader';
 import { useAppState, useAppDispatch, useToast } from '../context/AppContext';
 import { useIsApprover, useEffectiveRole } from '../hooks/useEffectiveRole';
 import { Card, Badge, EmptyState, Button } from '../components/ui';
+import type { Approval } from '../types';
 
 const statusBadge: Record<
   string,
@@ -16,11 +17,20 @@ const statusBadge: Record<
 };
 
 export default function HomeTab() {
-  const { approvals, vouchers, currentUser } = useAppState();
+  const { approvals, vouchers, currentUser, wikiProfiles } = useAppState();
   const dispatch = useAppDispatch();
   const showToast = useToast();
   const isApprover = useIsApprover();
   const effectiveRole = useEffectiveRole();
+
+  const wifeName = wikiProfiles.find((p) => p.id === 'wife')?.displayName ?? '老婆';
+  const husbandName = wikiProfiles.find((p) => p.id === 'husband')?.displayName ?? '老公';
+
+  function submitterTitle(a: Approval) {
+    if (a.submittedBy === 'wife') return wifeName;
+    if (a.submittedBy === 'husband') return husbandName;
+    return '臣';
+  }
 
   const pendingVoucherConfirms = vouchers.filter(
     (v) => v.pendingRedemption && v.purchasedBy !== currentUser
@@ -121,7 +131,7 @@ export default function HomeTab() {
             fullWidth
             className="mt-3 border-2 border-dashed border-brand/40"
           >
-            <PlusCircle size={16} /> 自拟奏本
+            <PlusCircle size={16} /> 自拟奏折
           </Button>
         )}
       </div>
@@ -197,18 +207,15 @@ export default function HomeTab() {
               <Card padding="lg" tone="surface">
                 <EmptyState
                   icon="🎉"
-                  title="朝堂清净，无臣进言"
-                  description="老公今日勤勉"
+                  title="朝堂今日清净"
+                  description="老公今日勤勉，无奏可批"
                 />
               </Card>
             ) : (
-              <div className="space-y-2.5">
+              <div className="space-y-3">
                 {incomingApprovals.map((app) => (
-                  <Card
+                  <motion.button
                     key={app.id}
-                    hoverable
-                    padding="md"
-                    tone="surface"
                     onClick={() =>
                       dispatch({
                         type: 'OPEN_OVERLAY',
@@ -216,28 +223,113 @@ export default function HomeTab() {
                         payload: { approvalId: app.id },
                       })
                     }
-                    className="cursor-pointer flex items-center justify-between"
+                    whileTap={{ scale: 0.98 }}
+                    transition={{ type: 'spring', stiffness: 380, damping: 24 }}
+                    className="relative w-full text-left rounded-card overflow-hidden"
+                    style={{
+                      background:
+                        'linear-gradient(180deg, #FBF1C7 0%, #F2E2A4 50%, #FBF1C7 100%)',
+                      boxShadow:
+                        '0 6px 16px -6px rgba(139,46,46,0.3), inset 0 0 0 1px rgba(212,166,69,0.45)',
+                    }}
                   >
-                    <div className="flex gap-3 items-center">
-                      <div className="w-10 h-10 bg-brand-soft rounded-pill flex items-center justify-center text-brand-ink font-bold text-xs">
-                        急
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-ink-primary text-sm">{app.title}</h3>
-                        <p className="text-xs text-ink-muted mt-0.5">
-                          {new Date(app.submittedAt).toLocaleString('zh-CN', {
-                            month: 'numeric',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
-                        </p>
-                      </div>
+                    {/* 顶部朱绫 + 奏字 */}
+                    <div
+                      className="relative flex items-center justify-between px-3 py-1.5"
+                      style={{
+                        background:
+                          'linear-gradient(90deg, #6B2323 0%, #8B2E2E 35%, #A33636 50%, #8B2E2E 65%, #6B2323 100%)',
+                        borderBottom: '1px solid #D4A645',
+                        boxShadow: 'inset 0 -1px 0 rgba(0,0,0,0.2)',
+                      }}
+                    >
+                      <span
+                        className="text-[11px] tracking-[0.4em] font-bold"
+                        style={{
+                          color: '#F5E8C8',
+                          fontFamily: 'var(--font-edict)',
+                          textShadow: '0 1px 0 rgba(0,0,0,0.3)',
+                        }}
+                      >
+                        奏 ▣ 上呈陛下
+                      </span>
+                      <span
+                        className="text-[10px] tracking-wide font-bold"
+                        style={{ color: 'rgba(245,232,200,0.78)' }}
+                      >
+                        {new Date(app.submittedAt).toLocaleString('zh-CN', {
+                          month: 'numeric',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </span>
                     </div>
-                    <div className="bg-brand text-ink-on-brand p-1.5 rounded-pill">
-                      <ChevronRight size={16} />
+
+                    {/* 黄绫纸主体 */}
+                    <div className="relative px-4 pt-3 pb-3.5">
+                      {/* 朱印（右下） */}
+                      <div
+                        aria-hidden
+                        className="absolute bottom-2 right-3 w-11 h-11 flex items-center justify-center rotate-[-7deg] pointer-events-none select-none"
+                        style={{
+                          background:
+                            'radial-gradient(circle at 35% 30%, #E85959 0%, #B83333 60%, #6B2323 100%)',
+                          color: '#FAF6EC',
+                          fontFamily: 'var(--font-edict)',
+                          fontSize: 10,
+                          fontWeight: 800,
+                          lineHeight: 1.1,
+                          letterSpacing: '0.05em',
+                          textAlign: 'center',
+                          borderRadius: 4,
+                          boxShadow:
+                            'inset 0 0 0 1.5px #6B2323, inset 0 0 0 3px #B83333, 0 1px 3px rgba(0,0,0,0.25)',
+                          textShadow: '0 1px 0 rgba(0,0,0,0.3)',
+                        }}
+                      >
+                        臣<br />印
+                      </div>
+
+                      <h3
+                        className="font-bold text-ink-primary text-base leading-snug pr-12"
+                        style={{
+                          fontFamily: 'var(--font-edict)',
+                          color: '#3D1F1F',
+                          letterSpacing: '0.04em',
+                        }}
+                      >
+                        {app.title}
+                      </h3>
+                      <p
+                        className="text-[12px] mt-1.5 pr-12"
+                        style={{
+                          color: '#6B4F23',
+                          fontFamily: 'var(--font-edict)',
+                          letterSpacing: '0.05em',
+                        }}
+                      >
+                        {submitterTitle(app)}谨奏，伏候圣裁。
+                      </p>
                     </div>
-                  </Card>
+
+                    {/* 底部描金细线 */}
+                    <div
+                      aria-hidden
+                      className="h-1 pointer-events-none"
+                      style={{
+                        background:
+                          'linear-gradient(90deg, transparent 0%, #D4A645 30%, #B8862E 50%, #D4A645 70%, transparent 100%)',
+                      }}
+                    />
+                    {/* 右侧 chevron 提示 */}
+                    <ChevronRight
+                      aria-hidden
+                      size={14}
+                      className="absolute top-1/2 right-1 -translate-y-1/2 opacity-40"
+                      style={{ color: '#6B2323' }}
+                    />
+                  </motion.button>
                 ))}
               </div>
             )}

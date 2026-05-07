@@ -43,7 +43,7 @@ export default function StatsOverlay() {
           <ChevronLeft size={20} />
         </IconButton>
         <h1 className="text-lg font-bold text-ink-primary">
-          {mode === 'history' ? '奏折档案' : '内帑起居注'}
+          {mode === 'history' ? '奏折档案' : '铜钱起居注'}
         </h1>
       </div>
 
@@ -61,7 +61,7 @@ export default function StatsOverlay() {
               </Card>
               <Card ornate padding="md" tone="surface" className="text-center">
                 <div className="font-black text-2xl text-brand-ink">{points}</div>
-                <div className="text-xs text-ink-muted font-bold mt-1">当前内帑</div>
+                <div className="text-xs text-ink-muted font-bold mt-1">当前钱袋</div>
               </Card>
             </div>
 

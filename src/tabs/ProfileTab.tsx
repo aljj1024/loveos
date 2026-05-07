@@ -16,8 +16,19 @@ import { Card, ConfirmModal, Button } from '../components/ui';
 import { dissolveCouple, DISSOLUTION_GRACE_PERIOD_DAYS } from '../lib/supabaseDb';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
+function formatRelativeTime(iso: string): string {
+  const ms = Date.now() - new Date(iso).getTime();
+  if (ms < 60_000) return '刚刚';
+  const min = Math.floor(ms / 60_000);
+  if (min < 60) return `${min} 分钟前`;
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return `${hr} 小时前`;
+  const day = Math.floor(hr / 24);
+  return `${day} 天前`;
+}
+
 export default function ProfileTab() {
-  const { points, currentUser, wikiProfiles, flipMode } = useAppState();
+  const { points, currentUser, wikiProfiles, flipMode, wifeMood, husbandMood } = useAppState();
   const dispatch = useAppDispatch();
   const showToast = useToast();
   const currentMood = useCurrentMood();
@@ -45,6 +56,7 @@ export default function ProfileTab() {
     currentUser === 'wife'
       ? husbandProfile?.displayName ?? '老公'
       : wifeProfile?.displayName ?? '老婆';
+  const partnerMoodState = currentUser === 'wife' ? husbandMood : wifeMood;
 
   const availableMoods =
     currentUser === 'husband'
@@ -148,6 +160,43 @@ export default function ProfileTab() {
           </div>
         </Card>
 
+        {/* 对方气象 */}
+        <Card padding="lg" tone="surface" ornate>
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-ink-primary font-bold font-display tracking-wide">
+              {partnerName}的气象
+            </h2>
+            <span className="text-[11px] text-ink-muted font-medium">
+              {formatRelativeTime(partnerMoodState.setAt)}更新
+            </span>
+          </div>
+          <div
+            className={`relative ${partnerMoodState.current.colorClass} rounded-card p-4 text-white flex items-center gap-3 overflow-hidden`}
+            style={{
+              boxShadow:
+                '0 4px 12px -4px rgba(139,46,46,0.3), inset 0 1px 0 rgba(255,255,255,0.4)',
+            }}
+          >
+            <div
+              aria-hidden
+              className="absolute -top-6 -right-6 w-20 h-20 rounded-pill opacity-30"
+              style={{
+                background:
+                  'radial-gradient(circle, rgba(255,255,255,0.6) 0%, transparent 70%)',
+              }}
+            />
+            <span className="relative text-3xl">{partnerMoodState.current.icon}</span>
+            <div className="relative">
+              <div className="font-bold text-base font-display tracking-wide">
+                {partnerMoodState.current.text}
+              </div>
+              <div className="text-[11px] text-white/85 mt-0.5">
+                {partnerName}已示意——朕可酌情而行
+              </div>
+            </div>
+          </div>
+        </Card>
+
         {/* 赛博休战庭 */}
         <Card padding="lg" tone="surface" ornate>
           <h3 className="font-bold text-ink-primary mb-1 font-display tracking-wide">🏳️ 赛博休战庭</h3>
@@ -176,10 +225,10 @@ export default function ProfileTab() {
           </AnimatePresence>
         </Card>
 
-        {/* 内帑（铜钱罐） */}
+        {/* 钱袋（铜钱罐） */}
         {isHusband ? (
           <Card padding="lg" tone="surface" ornate>
-            <h3 className="font-bold text-ink-primary mb-3 font-display tracking-wide">🪙 朕的内帑</h3>
+            <h3 className="font-bold text-ink-primary mb-3 font-display tracking-wide">🪙 朕的钱袋</h3>
             <div
               className="relative overflow-hidden rounded-card p-5 border-2"
               style={{
@@ -205,12 +254,12 @@ export default function ProfileTab() {
                 ◆ 当前铜钱 ◆
               </div>
             </div>
-            <p className="text-xs text-ink-muted mt-3">去「府库」接旨积铜钱，或在商店赎权</p>
+            <p className="text-xs text-ink-muted mt-3">去「府库」接旨积铜钱，或在商店兑用</p>
           </Card>
         ) : (
           <Card padding="lg" tone="surface" ornate>
             <h3 className="font-bold text-ink-secondary mb-2 text-sm font-display tracking-wide">
-              👀 老公的内帑
+              👀 老公的钱袋
             </h3>
             <div
               className="rounded-button p-3 flex items-center justify-between"

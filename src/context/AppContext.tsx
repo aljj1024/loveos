@@ -240,7 +240,7 @@ function reducer(state: AppState, action: AppAction): AppState {
           : t,
       )
       const points = state.points + task.reward
-      const ledger = [makeLedgerEntry(task.reward, `缴差入帐：${task.title}`, 'task_reward', task.id), ...state.ledger]
+      const ledger = [makeLedgerEntry(task.reward, `完工入帐：${task.title}`, 'task_reward', task.id), ...state.ledger]
       return { ...state, tasks, points, ledger }
     }
 
@@ -255,7 +255,7 @@ function reducer(state: AppState, action: AppAction): AppState {
       const item = state.storeItems.find(i => i.id === action.itemId)
       if (!item || state.points < item.cost) return state
       const points = state.points - item.cost
-      const ledger = [makeLedgerEntry(-item.cost, `赎权：${item.title}`, 'store_purchase', item.id), ...state.ledger]
+      const ledger = [makeLedgerEntry(-item.cost, `兑用：${item.title}`, 'store_purchase', item.id), ...state.ledger]
       const vouchers = [action.voucher, ...state.vouchers]
       return { ...state, points, ledger, vouchers }
     }
@@ -671,13 +671,17 @@ export function useToast() {
 export function usePendingCounts() {
   const { approvals, vouchers, tasks, currentUser } = useAppState()
 
-  const homeCount = approvals.filter(
-    a => a.status === 'pending' && a.submittedBy !== currentUser,
-  ).length
+  // Home tab：奏折待批 + 恩诏待核（核销由对方发起，等当前用户准奏，本质是审批）
+  const homeCount =
+    approvals.filter(
+      a => a.status === 'pending' && a.submittedBy !== currentUser,
+    ).length +
+    vouchers.filter(v => v.pendingRedemption && v.purchasedBy !== currentUser).length
 
-  const economyCount =
-    vouchers.filter(v => v.pendingRedemption && v.purchasedBy !== currentUser).length +
-    tasks.filter(t => t.createdBy === currentUser && t.status === 'pending_verify').length
+  // Economy tab：旨意待阅旨（己方下旨、对方复命，等己方验收）
+  const economyCount = tasks.filter(
+    t => t.createdBy === currentUser && t.status === 'pending_verify',
+  ).length
 
   return { homeCount, economyCount, total: homeCount + economyCount }
 }

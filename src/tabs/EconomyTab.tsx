@@ -31,7 +31,7 @@ export default function EconomyTab() {
 
   function handleAccept(taskId: string, reward: number) {
     dispatch({ type: 'ACCEPT_TASK', taskId });
-    showToast(`✅ 已接旨！缴差后获 ${reward} 🪙`);
+    showToast(`✅ 已接旨！完工后获 ${reward} 🪙`);
   }
 
   function handleComplete(taskId: string) {
@@ -46,7 +46,7 @@ export default function EconomyTab() {
 
   function performBuy(item: StoreItem) {
     if (points < item.cost) {
-      showToast('❌ 内帑空虚，接旨任务方可补给');
+      showToast('❌ 钱袋空空，接旨任务方可补给');
       return;
     }
     const voucher: Voucher = {
@@ -75,7 +75,7 @@ export default function EconomyTab() {
         subtitle={
           isApprover
             ? '颁布旨意，老公接旨听差 💪'
-            : '多接旨意多积铜钱，兑权赎名 🪙'
+            : '多接旨意多积铜钱，攒够便可兑用 🪙'
         }
       />
 
@@ -127,7 +127,7 @@ export default function EconomyTab() {
                       </div>
                     </div>
                     <Button size="sm" onClick={() => handleComplete(task.id)} variant="accent">
-                      复命缴差
+                      复命交差
                     </Button>
                   </Card>
                 ))}
@@ -298,7 +298,7 @@ export default function EconomyTab() {
                     disabled={points < item.cost}
                     onClick={() => setConfirmingBuy(item)}
                   >
-                    {points >= item.cost ? '赎权 🪙' : '内帑不足'}
+                    {points >= item.cost ? '兑用 🪙' : '钱袋不足'}
                   </Button>
                 ) : (
                   <div
@@ -309,7 +309,7 @@ export default function EconomyTab() {
                       border: '1px dashed var(--brand-primary)',
                     }}
                   >
-                    📌 待陛下赎权
+                    📌 待陛下兑用
                   </div>
                 )}
               </Card>
@@ -328,7 +328,7 @@ export default function EconomyTab() {
                 </div>
                 <div className="font-bold text-sm">设贡品</div>
                 <div className="text-[10px] text-ink-muted px-3 text-center">
-                  老婆定价 · 陛下以钱赎权
+                  老婆定价 · 陛下以钱兑用
                 </div>
               </motion.button>
             )}
@@ -461,16 +461,16 @@ export default function EconomyTab() {
           setConfirmingBuy(null);
         }}
         emoji={confirmingBuy?.icon ?? '🪙'}
-        title="确认赎权？"
+        title="确认兑用？"
         body={
           confirmingBuy ? (
             <>
               确定要花掉 <b className="text-ink-primary">{confirmingBuy.cost} 🪙</b><br />
-              赎得 <b className="text-ink-primary">「{confirmingBuy.title}」</b> 吗？
+              换得 <b className="text-ink-primary">「{confirmingBuy.title}」</b> 吗？
             </>
           ) : null
         }
-        confirmLabel={confirmingBuy ? `赎权 🪙×${confirmingBuy.cost}` : '赎权'}
+        confirmLabel={confirmingBuy ? `兑用 🪙×${confirmingBuy.cost}` : '兑用'}
         cancelLabel="再思量"
       />
 

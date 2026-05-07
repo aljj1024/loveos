@@ -10,7 +10,7 @@ const templateMeta: Record<ApprovalTemplate, { emoji: string; label: string }> =
   basketball: { emoji: '🏀', label: '打球奏本' },
   shopping: { emoji: '🛍️', label: '采办报禀' },
   truce: { emoji: '🏳️', label: '赛博休战' },
-  custom: { emoji: '📝', label: '自拟奏本' },
+  custom: { emoji: '📝', label: '自拟奏折' },
 };
 
 export default function FormOverlay() {
@@ -63,7 +63,7 @@ export default function FormOverlay() {
         </IconButton>
         <h1 className="text-lg font-bold text-ink-primary">
           <span className="mr-1">{meta.emoji}</span>
-          起草奏本 · {meta.label}
+          起草奏折 · {meta.label}
         </h1>
       </div>
 

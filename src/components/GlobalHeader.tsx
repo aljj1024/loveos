@@ -38,13 +38,17 @@ export default function GlobalHeader({ title, subtitle }: GlobalHeaderProps) {
 
   function handleBell() {
     if (totalPending === 0) {
-      dispatch({ type: 'SHOW_TOAST', message: '🔕 无新事可禀' });
+      dispatch({ type: 'SHOW_TOAST', message: '🔕 朝堂今日清净' });
       return;
     }
-    const parts: string[] = [];
-    if (homeCount > 0) parts.push(`${homeCount} 道奏本待批`);
-    if (economyCount > 0) parts.push(`${economyCount} 道旨意待理`);
-    dispatch({ type: 'SHOW_TOAST', message: `📜 ${parts.join('，')}` });
+    // 优先跳到待办最多的那个 tab；并列时先 home（奏折）
+    if (homeCount >= economyCount && homeCount > 0) {
+      dispatch({ type: 'SET_TAB', tab: 'home' });
+      dispatch({ type: 'SHOW_TOAST', message: `📜 ${homeCount} 件待陛下朱批` });
+    } else if (economyCount > 0) {
+      dispatch({ type: 'SET_TAB', tab: 'economy' });
+      dispatch({ type: 'SHOW_TOAST', message: `🪙 ${economyCount} 件待陛下阅旨` });
+    }
   }
 
   const navIconStyle = {
