@@ -45,7 +45,10 @@
   --wood-strip: linear-gradient(90deg, #E5C572 0%, #B8862E 30%, #D4A645 55%, #B8862E 80%, #E5C572 100%);
   --wood-edge: #6B2323;
 
-  --font-display: 'Fredoka', 'Quicksand', 'Hiragino Maru Gothic ProN', '幼圆', 'YuanTi SC', 'MiSans', sans-serif;
+  /* 戏精标题：得意黑（Smiley Sans）→ 霞鹜文楷（楷书 fallback）→ MiSans */
+  --font-display: 'Smiley Sans', 'LXGW WenKai', 'MiSans', '"PingFang SC"', system-ui, sans-serif;
+  /* 仪式感长文 / 奏折正文：霞鹜文楷为主 */
+  --font-edict: 'LXGW WenKai', 'STKaiti', '"楷体"', '"KaiTi"', 'MiSans', serif;
 }
 
 html.dark {

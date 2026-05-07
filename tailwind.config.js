@@ -39,6 +39,8 @@ export default {
       },
       fontFamily: {
         sans: ['MiSans', '"PingFang SC"', '"HarmonyOS Sans SC"', '"Source Han Sans CN"', 'system-ui', '-apple-system', 'sans-serif'],
+        display: ['Smiley Sans', 'LXGW WenKai', 'MiSans', '"PingFang SC"', 'system-ui', 'sans-serif'],
+        edict: ['LXGW WenKai', 'STKaiti', '"楷体"', '"KaiTi"', 'MiSans', 'serif'],
       },
       borderRadius: {
         card: 'var(--radius-card)',

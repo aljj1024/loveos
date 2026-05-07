@@ -134,16 +134,50 @@ export default function GlobalHeader({ title, subtitle }: GlobalHeaderProps) {
         </div>
       </div>
 
-      {/* Cream-paper village nameplate */}
-      <div
-        className="relative rounded-card p-3 flex items-center justify-between"
-        style={{
-          background: 'linear-gradient(180deg, #FFFBF0 0%, #F5E8C8 100%)',
-          border: '1.5px solid var(--wood-edge)',
-          boxShadow:
-            'inset 0 1px 0 rgba(255,255,255,0.6), 0 4px 10px rgba(0,0,0,0.12)',
-        }}
-      >
+      {/* 横向卷轴 nameplate：左右朱漆轴头 + 中间宣纸 */}
+      <div className="relative flex items-stretch">
+        {/* 左轴头 */}
+        <div
+          aria-hidden
+          className="relative flex-shrink-0 w-2.5 rounded-l-md self-stretch"
+          style={{
+            background:
+              'linear-gradient(180deg, #8B2E2E 0%, #4A1414 35%, #6B2323 50%, #4A1414 65%, #8B2E2E 100%)',
+            boxShadow:
+              'inset 0 0 0 1px #D4A645, 0 2px 6px rgba(74,20,20,0.5), inset 1px 0 1px rgba(255,255,255,0.15)',
+          }}
+        />
+        {/* 中间宣纸内容 */}
+        <div
+          className="relative flex-1 p-3 flex items-center justify-between rounded-none"
+          style={{
+            background: 'linear-gradient(180deg, #FFFBF0 0%, #F5E8C8 100%)',
+            borderTop: '1.5px solid var(--brand-accent)',
+            borderBottom: '1.5px solid var(--brand-accent)',
+            boxShadow:
+              'inset 0 1px 0 rgba(255,255,255,0.6), 0 4px 10px rgba(0,0,0,0.12)',
+          }}
+        >
+          {/* 内层描金细线（上） */}
+          <div
+            aria-hidden
+            className="absolute top-1 left-3 right-3 h-px pointer-events-none"
+            style={{
+              background:
+                'linear-gradient(90deg, transparent 0%, #D4A645 30%, #B8862E 50%, #D4A645 70%, transparent 100%)',
+              opacity: 0.55,
+            }}
+          />
+          {/* 内层描金细线（下） */}
+          <div
+            aria-hidden
+            className="absolute bottom-1 left-3 right-3 h-px pointer-events-none"
+            style={{
+              background:
+                'linear-gradient(90deg, transparent 0%, #D4A645 30%, #B8862E 50%, #D4A645 70%, transparent 100%)',
+              opacity: 0.55,
+            }}
+          />
         <div className="flex items-center gap-3">
           <div className="relative">
             <div
@@ -207,6 +241,18 @@ export default function GlobalHeader({ title, subtitle }: GlobalHeaderProps) {
             )}
           </div>
         </div>
+        </div>
+        {/* 右轴头 */}
+        <div
+          aria-hidden
+          className="relative flex-shrink-0 w-2.5 rounded-r-md self-stretch"
+          style={{
+            background:
+              'linear-gradient(180deg, #8B2E2E 0%, #4A1414 35%, #6B2323 50%, #4A1414 65%, #8B2E2E 100%)',
+            boxShadow:
+              'inset 0 0 0 1px #D4A645, 0 2px 6px rgba(74,20,20,0.5), inset -1px 0 1px rgba(255,255,255,0.15)',
+          }}
+        />
       </div>
     </div>
   );

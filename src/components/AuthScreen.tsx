@@ -24,10 +24,10 @@ export default function AuthScreen() {
 
   return (
     <div className="w-full h-[100svh] md:max-w-[400px] md:h-[850px] md:max-h-[90svh] md:rounded-[2.5rem] md:border-[8px] md:border-gray-900 md:shadow-2xl bg-white flex flex-col overflow-hidden">
-      <div className="bg-gradient-to-br from-rose-400 to-pink-500 px-6 pt-14 pb-20 text-center">
+      <div className="bg-gradient-to-br from-[#D44545] via-[#B8862E] to-[#8B2E2E] px-6 pt-14 pb-20 text-center">
         <div className="text-5xl mb-3">💑</div>
         <h1 className="text-3xl font-black text-white">LoveOS</h1>
-        <p className="text-rose-100 text-sm mt-2 font-medium">两个人的小朝廷</p>
+        <p className="text-[#F5E8C8] text-sm mt-2 font-medium">两个人的小朝廷</p>
       </div>
 
       <div className="flex-1 px-6 -mt-10 relative z-10 flex flex-col justify-start">
@@ -38,10 +38,10 @@ export default function AuthScreen() {
           <button
             onClick={handleGoogleLogin}
             disabled={loading}
-            className="w-full bg-white border-2 border-gray-200 text-gray-700 font-black py-4 rounded-2xl flex items-center justify-center gap-3 shadow-sm active:scale-95 transition-transform disabled:opacity-60 hover:border-rose-300 hover:shadow-md"
+            className="w-full bg-white border-2 border-gray-200 text-gray-700 font-black py-4 rounded-2xl flex items-center justify-center gap-3 shadow-sm active:scale-95 transition-transform disabled:opacity-60 hover:border-[#D44545] hover:shadow-md"
           >
             {loading ? (
-              <Loader2 size={20} className="animate-spin text-rose-500" />
+              <Loader2 size={20} className="animate-spin text-[#D44545]" />
             ) : (
               <svg width="20" height="20" viewBox="0 0 48 48">
                 <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
@@ -54,7 +54,7 @@ export default function AuthScreen() {
             {loading ? '跳转中...' : '使用 Google 登录'}
           </button>
 
-          {error && <p className="text-rose-500 text-xs font-bold mt-3 text-center">⚠️ {error}</p>}
+          {error && <p className="text-[#D44545] text-xs font-bold mt-3 text-center">⚠️ {error}</p>}
         </div>
 
         <p className="text-center text-xs text-gray-300 mt-4 font-medium">

@@ -10,7 +10,7 @@ type CardProps = Omit<HTMLMotionProps<'div'>, 'children'> & {
   padding?: Padding;
   tone?: Tone;
   bordered?: boolean;
-  /** 顶部加一道动森木纹装饰条（替代旧 miHoYo 棱角装饰）。 */
+  /** 顶部加描金细线 + 中央朱印 + 右下小印的"开卷"装饰（戏精政务版）。 */
   ornate?: boolean;
   /** 暖纸纹叠加，给卡片一点手作感。 */
   glassy?: boolean;
@@ -50,11 +50,40 @@ export default function Card({
       {...rest}
     >
       {ornate && (
-        <div
-          aria-hidden
-          className="absolute top-0 left-0 right-0 h-1.5 pointer-events-none"
-          style={{ background: 'var(--wood-strip)' }}
-        />
+        <>
+          {/* 顶部描金细线（左右渐隐 + 中央留白给朱印） */}
+          <div
+            aria-hidden
+            className="absolute top-0 left-0 right-0 h-[1.5px] pointer-events-none"
+            style={{
+              background:
+                'linear-gradient(90deg, transparent 0%, var(--brand-accent) 18%, #B8862E 38%, transparent 48%, transparent 52%, #B8862E 62%, var(--brand-accent) 82%, transparent 100%)',
+              opacity: 0.85,
+            }}
+          />
+          {/* 中央朱印小圆（开卷印） */}
+          <div
+            aria-hidden
+            className="absolute top-[-3px] left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-pill pointer-events-none"
+            style={{
+              background: 'var(--brand-primary)',
+              boxShadow: '0 0 0 1.5px var(--bg-surface), 0 1px 3px rgba(139,46,46,0.4)',
+            }}
+          />
+          {/* 右下角呼应朱印（落款） */}
+          <div
+            aria-hidden
+            className="absolute bottom-1.5 right-1.5 pointer-events-none"
+            style={{
+              width: 8,
+              height: 8,
+              borderRadius: 2,
+              background: 'var(--brand-primary)',
+              opacity: 0.32,
+              boxShadow: 'inset 0 0 0 1px rgba(139,46,46,0.5)',
+            }}
+          />
+        </>
       )}
       {glassy && (
         <div

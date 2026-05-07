@@ -1,10 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Quicksand:wght@500;600;700&display=swap');
 @import './styles/theme.css';
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* MiSans — 正文 / UI 主字体（米哈游味道天然契合） */
 @font-face {
   font-family: 'MiSans';
   src: url('https://cdn.jsdelivr.net/npm/misans@4.1.0/lib/Normal/MiSans-Regular.woff2') format('woff2');
@@ -26,6 +26,29 @@
 @font-face {
   font-family: 'MiSans';
   src: url('https://cdn.jsdelivr.net/npm/misans@4.1.0/lib/Normal/MiSans-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+
+/* 得意黑 (Smiley Sans) — 戏精标题字体（宽博江湖气，配"老婆大人""倒反天罡"绝配） */
+@font-face {
+  font-family: 'Smiley Sans';
+  src: url('https://cdn.jsdelivr.net/gh/atelier-anchor/smiley-sans@v2.0.1/dist/SmileySans-Oblique.woff2') format('woff2');
+  font-weight: 400 900;
+  font-style: oblique;
+  font-display: swap;
+}
+
+/* 霞鹜文楷 (LXGW WenKai) — 仪式感长文 / 奏折正文（楷书味的现代化） */
+@font-face {
+  font-family: 'LXGW WenKai';
+  src: url('https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/lxgwwenkai-regular.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'LXGW WenKai';
+  src: url('https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/lxgwwenkai-bold.woff2') format('woff2');
   font-weight: 700;
   font-display: swap;
 }
@@ -77,6 +100,11 @@ body {
 
 .font-display {
   font-family: var(--font-display);
+}
+
+.font-edict {
+  font-family: var(--font-edict);
+  letter-spacing: 0.02em;
 }
 
 #root {

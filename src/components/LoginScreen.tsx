@@ -14,12 +14,12 @@ export default function LoginScreen() {
   }
 
   const roles = [
-    { id: 'wife' as UserRole, profile: wife, mood: wifeMood, accent: 'rose', tagBg: 'bg-rose-100', tagText: 'text-rose-600', btnBg: 'from-rose-400 to-pink-500', shadow: 'shadow-rose-200' },
-    { id: 'husband' as UserRole, profile: husband, mood: husbandMood, accent: 'blue', tagBg: 'bg-blue-100', tagText: 'text-blue-600', btnBg: 'from-blue-400 to-indigo-500', shadow: 'shadow-blue-200' },
+    { id: 'wife' as UserRole, profile: wife, mood: wifeMood, accent: 'crimson', tagBg: 'bg-[#F8D4D4]', tagText: 'text-[#8B2E2E]', btnBg: 'from-[#D44545] to-[#8B2E2E]', shadow: 'shadow-[#D44545]/30' },
+    { id: 'husband' as UserRole, profile: husband, mood: husbandMood, accent: 'gold', tagBg: 'bg-[#F5E8C8]', tagText: 'text-[#6B4F23]', btnBg: 'from-[#D4A645] to-[#8B6624]', shadow: 'shadow-[#D4A645]/30' },
   ];
 
   return (
-    <div className="w-full h-[100svh] bg-gradient-to-br from-rose-50 via-pink-50 to-orange-50 flex flex-col items-center justify-center px-8">
+    <div className="w-full h-[100svh] bg-gradient-to-br from-[#FAF3E0] via-[#F8D4D4]/40 to-[#F5E8C8] flex flex-col items-center justify-center px-8">
       <div className="mb-10 text-center">
         <div className="text-5xl mb-3">💑</div>
         <h1 className="text-3xl font-black text-gray-800 tracking-tight">LoveOS</h1>
@@ -31,7 +31,7 @@ export default function LoginScreen() {
           <button
             key={id}
             onClick={() => login(id)}
-            className={`w-full bg-white rounded-3xl p-5 shadow-lg border-2 ${id === 'wife' ? 'border-rose-100' : 'border-blue-100'} flex items-center gap-5 active:scale-[0.98] transition-transform text-left`}
+            className={`w-full bg-white rounded-3xl p-5 shadow-lg border-2 ${id === 'wife' ? 'border-[#F8D4D4]' : 'border-[#F5E8C8]'} flex items-center gap-5 active:scale-[0.98] transition-transform text-left`}
           >
             <div className="relative flex-shrink-0">
               <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center text-4xl shadow-inner border border-gray-100">
