@@ -1,6 +1,20 @@
 import { supabase } from './supabase'
-import type { Task, Approval, StoreItem, Voucher, LedgerEntry, WishlistItem, WikiProfile, MoodState } from '../types'
+import type {
+  Task,
+  Approval,
+  StoreItem,
+  Voucher,
+  LedgerEntry,
+  WishlistItem,
+  WikiProfile,
+  MoodState,
+  Couple,
+  RelationshipStage,
+} from '../types'
 import { DEFAULT_MOOD, DEFAULT_STORE_ITEMS, DEFAULT_WIKI_PROFILES } from '../constants'
+
+/** 分手友好：默认宽限期 180 天（市场调研里 '温柔地告别' 的承诺） */
+export const DISSOLUTION_GRACE_PERIOD_DAYS = 180
 
 // ─── Row transformers (DB snake_case → TS camelCase) ─────────────────────────
 
@@ -19,6 +33,7 @@ export function taskFromRow(row: Record<string, unknown>): Task {
     completedAt: row.completed_at as string | undefined,
     verifiedAt: row.verified_at as string | undefined,
     sourceApprovalId: row.source_approval_id as string | undefined,
+    expiresAt: row.expires_at as string | undefined,
   }
 }
 
@@ -37,6 +52,24 @@ export function approvalFromRow(row: Record<string, unknown>): Approval {
     conditionText: row.condition_text as string | undefined,
     conditionTaskId: row.condition_task_id as string | undefined,
     pointsDeducted: row.points_deducted as number | undefined,
+    expiresAt: row.expires_at as string | undefined,
+  }
+}
+
+export function coupleFromRow(row: Record<string, unknown>): Couple {
+  return {
+    id: row.id as string,
+    user1Id: row.user1_id as string,
+    user2Id: (row.user2_id as string | null) ?? undefined,
+    inviteCode: row.invite_code as string,
+    createdAt: row.created_at as string,
+    dissolvedAt: (row.dissolved_at as string | null) ?? undefined,
+    dissolutionGracePeriodEndsAt:
+      (row.dissolution_grace_period_ends_at as string | null) ?? undefined,
+    dissolvedBy: (row.dissolved_by as string | null) ?? undefined,
+    dissolutionReason: (row.dissolution_reason as string | null) ?? undefined,
+    relationshipStage: (row.relationship_stage as RelationshipStage) ?? 'dating',
+    anniversaryDate: (row.anniversary_date as string | null) ?? undefined,
   }
 }
 
@@ -159,6 +192,7 @@ export async function upsertTask(coupleId: string, task: Task) {
     completed_at: task.completedAt ?? null,
     verified_at: task.verifiedAt ?? null,
     source_approval_id: task.sourceApprovalId ?? null,
+    expires_at: task.expiresAt ?? null,
   })
   if (error) console.error('upsertTask', error)
 }
@@ -179,6 +213,7 @@ export async function upsertApproval(coupleId: string, approval: Approval) {
     condition_text: approval.conditionText ?? null,
     condition_task_id: approval.conditionTaskId ?? null,
     points_deducted: approval.pointsDeducted ?? null,
+    expires_at: approval.expiresAt ?? null,
   })
   if (error) console.error('upsertApproval', error)
 }
@@ -347,4 +382,92 @@ export async function joinCouple(userId: string, inviteCode: string): Promise<st
   if (joinError) throw new Error(joinError.message)
 
   return couple.id as string
+}
+
+// ─── Couple lifecycle (migration 004) ─────────────────────────────────────────
+
+/** 读取 couple 元数据 — 含分手 / 关系阶段字段 */
+export async function loadCouple(coupleId: string): Promise<Couple | null> {
+  const { data, error } = await supabase
+    .from('couples')
+    .select('*')
+    .eq('id', coupleId)
+    .maybeSingle()
+  if (error) {
+    console.error('loadCouple', error)
+    return null
+  }
+  return data ? coupleFromRow(data as Record<string, unknown>) : null
+}
+
+/**
+ * 触发分手友好流程：
+ * - 写 dissolved_at = now
+ * - 写 dissolution_grace_period_ends_at = now + 180 天
+ * - 写 dissolved_by = userId
+ *
+ * 用户协议承诺："分手了我们会替你温柔地告别——双方各自下载导出，180 天后清除"。
+ * 实际数据清除由 lifecycle-cron Edge Function 在过期后执行。
+ */
+export async function dissolveCouple(
+  coupleId: string,
+  userId: string,
+  reason?: string,
+) {
+  const now = new Date()
+  const graceEnd = new Date(now)
+  graceEnd.setDate(graceEnd.getDate() + DISSOLUTION_GRACE_PERIOD_DAYS)
+
+  const { error } = await supabase
+    .from('couples')
+    .update({
+      dissolved_at: now.toISOString(),
+      dissolution_grace_period_ends_at: graceEnd.toISOString(),
+      dissolved_by: userId,
+      dissolution_reason: reason ?? null,
+    })
+    .eq('id', coupleId)
+
+  if (error) {
+    console.error('dissolveCouple', error)
+    throw new Error(error.message)
+  }
+}
+
+/** 撤销分手（在宽限期内反悔） */
+export async function undissolveCouple(coupleId: string) {
+  const { error } = await supabase
+    .from('couples')
+    .update({
+      dissolved_at: null,
+      dissolution_grace_period_ends_at: null,
+      dissolved_by: null,
+      dissolution_reason: null,
+    })
+    .eq('id', coupleId)
+  if (error) {
+    console.error('undissolveCouple', error)
+    throw new Error(error.message)
+  }
+}
+
+/** 设置关系阶段（dating → cohabiting → married → parenting） */
+export async function setRelationshipStage(
+  coupleId: string,
+  stage: RelationshipStage,
+) {
+  const { error } = await supabase
+    .from('couples')
+    .update({ relationship_stage: stage })
+    .eq('id', coupleId)
+  if (error) console.error('setRelationshipStage', error)
+}
+
+/** 设置纪念日（在一起的起点） */
+export async function setAnniversaryDate(coupleId: string, date: string | null) {
+  const { error } = await supabase
+    .from('couples')
+    .update({ anniversary_date: date })
+    .eq('id', coupleId)
+  if (error) console.error('setAnniversaryDate', error)
 }

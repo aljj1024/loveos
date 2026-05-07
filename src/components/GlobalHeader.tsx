@@ -2,6 +2,7 @@ import { Bell, LogOut } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useAppState, useAppDispatch, useCurrentMood, usePendingCounts } from '../context/AppContext';
 import { useIsHusband } from '../hooks/useIsHusband';
+import { useEffectiveTier } from '../hooks/useTier';
 import { IconButton } from './ui';
 
 interface GlobalHeaderProps {
@@ -15,6 +16,7 @@ export default function GlobalHeader({ title, subtitle }: GlobalHeaderProps) {
   const currentMood = useCurrentMood();
   const { homeCount, economyCount, total: totalPending } = usePendingCounts();
   const isHusband = useIsHusband();
+  const tier = useEffectiveTier();
 
   const profile = wikiProfiles.find((p) => p.id === currentUser);
 
@@ -203,42 +205,60 @@ export default function GlobalHeader({ title, subtitle }: GlobalHeaderProps) {
             >
               {profile?.displayName ?? '...'}
             </div>
-            {isHusband ? (
+            <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+              {/* 段位徽章（始终显示，倒反天罡自动互换） */}
               <div
-                className="relative inline-flex items-center gap-1.5 mt-1.5 px-2.5 py-1 rounded-pill text-xs font-bold"
-                style={{
-                  background: 'linear-gradient(180deg, #F2C97D 0%, #D4A645 100%)',
-                  color: '#3D1F1F',
-                  border: '1.5px solid #8B6624',
-                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.5)',
-                }}
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-pill text-[11px] font-bold"
+                title={
+                  tier.toNext != null
+                    ? `还差 ${tier.toNext} 即可晋升`
+                    : '已至顶阶'
+                }
+                style={
+                  tier.axis === 'wife'
+                    ? {
+                        background: '#F8D4D4',
+                        color: '#8B2E2E',
+                        border: '1.5px solid #D44545',
+                      }
+                    : {
+                        background: 'linear-gradient(180deg, #F2C97D 0%, #D4A645 100%)',
+                        color: '#3D1F1F',
+                        border: '1.5px solid #8B6624',
+                        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.5)',
+                      }
+                }
               >
-                <span className="text-sm leading-none">🪙</span>
-                <span className="tracking-wider tabular-nums">{points}</span>
-                {delta && (
-                  <span
-                    key={delta.key}
-                    className={`animate-points-fly absolute -top-1 left-1/2 -translate-x-1/2 text-xs font-black pointer-events-none whitespace-nowrap ${
-                      delta.amount > 0 ? 'text-state-warning' : 'text-ink-muted'
-                    }`}
-                  >
-                    {delta.amount > 0 ? `+${delta.amount}` : delta.amount}
-                  </span>
-                )}
+                <span className="text-[11px] leading-none">{tier.axis === 'wife' ? '👑' : '⚔️'}</span>
+                <span className="tracking-wide font-display">{tier.name}</span>
               </div>
-            ) : (
-              <div
-                className="inline-flex items-center gap-1.5 mt-1.5 px-2.5 py-1 rounded-pill text-xs font-bold"
-                style={{
-                  background: '#F8D4D4',
-                  color: '#8B2E2E',
-                  border: '1.5px solid #D44545',
-                }}
-              >
-                <span className="text-sm leading-none">👑</span>
-                <span className="tracking-wide">准奏权</span>
-              </div>
-            )}
+
+              {/* 铜钱徽章（仅老公视角；含浮动 +X 动效） */}
+              {isHusband && (
+                <div
+                  className="relative inline-flex items-center gap-1 px-2 py-0.5 rounded-pill text-[11px] font-bold"
+                  style={{
+                    background: 'linear-gradient(180deg, #F2C97D 0%, #D4A645 100%)',
+                    color: '#3D1F1F',
+                    border: '1.5px solid #8B6624',
+                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.5)',
+                  }}
+                >
+                  <span className="text-[11px] leading-none">🪙</span>
+                  <span className="tracking-wider tabular-nums">{points}</span>
+                  {delta && (
+                    <span
+                      key={delta.key}
+                      className={`animate-points-fly absolute -top-1 left-1/2 -translate-x-1/2 text-xs font-black pointer-events-none whitespace-nowrap ${
+                        delta.amount > 0 ? 'text-state-warning' : 'text-ink-muted'
+                      }`}
+                    >
+                      {delta.amount > 0 ? `+${delta.amount}` : delta.amount}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
         </div>

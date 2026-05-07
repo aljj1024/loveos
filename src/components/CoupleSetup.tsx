@@ -114,6 +114,11 @@ export default function CoupleSetup({ onComplete }: Props) {
                 </button>
               </div>
               {error && <p className="text-[#D44545] text-xs font-bold mt-3 text-center">⚠️ {error}</p>}
+
+              {/* 分手友好承诺（onboarding 一行字）*/}
+              <p className="text-[10px] text-gray-400 leading-relaxed mt-5 text-center px-2">
+                朝堂破裂时我们会替你温柔地告别——双方各自下载导出，180 天后数据自动清除。
+              </p>
             </>
           )}
 

@@ -2,9 +2,35 @@
 
 export type UserRole = 'wife' | 'husband';
 
+// ─── Couple / Relationship Lifecycle ─────────────────────
+
+export type RelationshipStage = 'dating' | 'cohabiting' | 'married' | 'parenting';
+
+export interface Couple {
+  id: string;
+  user1Id: string;
+  user2Id?: string;
+  inviteCode: string;
+  createdAt: string;
+  // 分手友好（migration 004）
+  dissolvedAt?: string;
+  dissolutionGracePeriodEndsAt?: string;
+  dissolvedBy?: string;
+  dissolutionReason?: string;
+  // 关系阶段（migration 004）
+  relationshipStage: RelationshipStage;
+  anniversaryDate?: string;
+}
+
 // ─── Approval / OA ───────────────────────────────────────
 
-export type ApprovalStatus = 'pending' | 'approved' | 'rejected' | 'conditional';
+// 'auto_approved' — 奏折超时未朱批，cron 自动通过（migration 004）
+export type ApprovalStatus =
+  | 'pending'
+  | 'approved'
+  | 'rejected'
+  | 'conditional'
+  | 'auto_approved';
 export type ApprovalTemplate = 'basketball' | 'shopping' | 'truce' | 'custom';
 
 export interface Approval {
@@ -21,11 +47,20 @@ export interface Approval {
   conditionText?: string;
   conditionTaskId?: string;
   pointsDeducted?: number;
+  /** 超时兜底（migration 004）：到期且仍 pending 时 cron 自动转 auto_approved */
+  expiresAt?: string;
 }
 
 // ─── Task / Economy ──────────────────────────────────────
 
-export type TaskStatus = 'open' | 'accepted' | 'pending_verify' | 'verified' | 'cancelled';
+// 'expired' — 旨意超时未接，cron 自动关闭（migration 004）
+export type TaskStatus =
+  | 'open'
+  | 'accepted'
+  | 'pending_verify'
+  | 'verified'
+  | 'cancelled'
+  | 'expired';
 
 export interface Task {
   id: string;
@@ -41,6 +76,8 @@ export interface Task {
   completedAt?: string;
   verifiedAt?: string;
   sourceApprovalId?: string;
+  /** 超时兜底（migration 004）：到期且仍 open 时 cron 自动转 expired */
+  expiresAt?: string;
 }
 
 // ─── Store / Marketplace ─────────────────────────────────

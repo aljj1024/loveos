@@ -55,6 +55,15 @@ export default function WikiTab() {
   const profileOwnerName = activeProfile?.displayName ?? (activeProfileId === 'wife' ? '老婆' : '老公');
   const wishlistTitle = isOwnProfile ? '朕的愿册' : `${profileOwnerName}的愿册`;
 
+  // 暗中领命：自己看自己的愿册时，被领走的项目从列表中隐藏，只在顶部
+  // 显示一个"已被对方暗中领走 X 件"提示，制造发现惊喜（plan F.2）。
+  const secretlyClaimedCount = isOwnProfile
+    ? visibleWishlist.filter((w) => !!w.claimedBy).length
+    : 0;
+  const renderableWishlist = isOwnProfile
+    ? visibleWishlist.filter((w) => !w.claimedBy)
+    : visibleWishlist;
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -229,14 +238,33 @@ export default function WikiTab() {
             )}
           </AnimatePresence>
 
-          {visibleWishlist.length === 0 && !addingWish && (
+          {/* 暗中领命提示（仅自己愿册）：不剧透被领的具体物，只汇总数量 */}
+          {isOwnProfile && secretlyClaimedCount > 0 && (
+            <Card padding="md" tone="accent" className="mb-3 border-brand-accent">
+              <div className="flex items-center gap-3">
+                <div className="text-2xl">🤫</div>
+                <div className="flex-1">
+                  <div className="font-bold text-sm text-brand-ink">
+                    已有 {secretlyClaimedCount} 件心愿被暗中领走
+                  </div>
+                  <div className="text-[11px] text-ink-muted mt-0.5 leading-relaxed">
+                    待你发现的小惊喜——请保持期待。
+                  </div>
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {renderableWishlist.length === 0 && !addingWish && (
             <Card padding="lg" tone="surface">
               <EmptyState
                 icon="📝"
                 title="愿册尚空"
                 description={
                   isOwnProfile
-                    ? '添第一笔吧'
+                    ? secretlyClaimedCount > 0
+                      ? '其余心愿皆被暗中领走'
+                      : '添第一笔吧'
                     : `${profileOwnerName} 尚未着墨`
                 }
               />
@@ -244,7 +272,7 @@ export default function WikiTab() {
           )}
 
           <div className="space-y-2.5">
-            {visibleWishlist.map((item) => (
+            {renderableWishlist.map((item) => (
               <Card
                 key={item.id}
                 padding="md"

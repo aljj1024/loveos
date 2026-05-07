@@ -2,11 +2,19 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, Moon, Sun } from 'lucide-react';
 import GlobalHeader from '../components/GlobalHeader';
-import { useAppState, useAppDispatch, useToast, useCurrentMood } from '../context/AppContext';
+import {
+  useAppState,
+  useAppDispatch,
+  useToast,
+  useCurrentMood,
+  useAuthState,
+} from '../context/AppContext';
 import { useMoodTimer } from '../hooks/useMoodTimer';
 import { useIsHusband } from '../hooks/useIsHusband';
 import { DEFAULT_MOODS } from '../constants';
 import { Card, ConfirmModal, Button } from '../components/ui';
+import { dissolveCouple, DISSOLUTION_GRACE_PERIOD_DAYS } from '../lib/supabaseDb';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 export default function ProfileTab() {
   const { points, currentUser, wikiProfiles, flipMode } = useAppState();
@@ -22,6 +30,9 @@ export default function ProfileTab() {
   );
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [confirmingEndFlip, setConfirmingEndFlip] = useState(false);
+  const [confirmingDissolve, setConfirmingDissolve] = useState(false);
+  const [dissolving, setDissolving] = useState(false);
+  const { coupleId, session } = useAuthState();
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', isDark);
@@ -40,9 +51,40 @@ export default function ProfileTab() {
       ? DEFAULT_MOODS.filter((m) => m.id !== 'period')
       : DEFAULT_MOODS;
 
+  const [stamp, setStamp] = useState<{ key: number; icon: string } | null>(null);
+
   function handleMoodSelect(m: typeof DEFAULT_MOODS[0]) {
     dispatch({ type: 'SET_MOOD', mood: m });
     showToast(`${m.icon} 圣意已更新，已同步给${partnerName}`);
+    // 朱印盖章动画 + 震动反馈
+    setStamp({ key: Date.now(), icon: m.icon });
+    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+      try { navigator.vibrate([15, 25, 35]); } catch { /* noop */ }
+    }
+    setTimeout(() => setStamp(null), 900);
+  }
+
+  async function handleDissolve() {
+    if (!coupleId || !session?.user.id) {
+      showToast('⚠️ 朝堂未建立，无可切断');
+      setConfirmingDissolve(false);
+      return;
+    }
+    setDissolving(true);
+    try {
+      await dissolveCouple(coupleId, session.user.id);
+      showToast('🪦 朝堂已切断，进入宽限期');
+      // 切断后强制退出登录（下次进入会重新走 CoupleSetup 流程或显示宽限期 banner）
+      if (isSupabaseConfigured) {
+        await supabase.auth.signOut();
+      }
+      dispatch({ type: 'LOGOUT' });
+    } catch (e) {
+      showToast(`⚠️ 切断失败：${(e as Error).message}`);
+    } finally {
+      setDissolving(false);
+      setConfirmingDissolve(false);
+    }
   }
 
   function handleTruce() {
@@ -270,6 +312,18 @@ export default function ProfileTab() {
             <span>🗑️ 清空朝堂</span>
             <ChevronRight size={18} className="text-state-danger/70" />
           </button>
+          {coupleId && (
+            <button
+              onClick={() => setConfirmingDissolve(true)}
+              className="w-full bg-bg-surface p-4 rounded-card border border-state-danger/30 flex justify-between items-center text-sm font-bold text-state-danger active:bg-state-danger/10 transition-colors"
+            >
+              <span>🪦 紧急切断朝堂</span>
+              <ChevronRight size={18} className="text-state-danger/70" />
+            </button>
+          )}
+          <p className="text-[11px] text-ink-muted leading-relaxed mt-1 px-1">
+            朝堂破裂时一键冻结对方访问，{DISSOLUTION_GRACE_PERIOD_DAYS} 日宽限期后数据自动清除——温柔告别，互不为难。
+          </p>
         </div>
       </div>
 
@@ -309,6 +363,77 @@ export default function ProfileTab() {
         body={<>归还后秩序立刻回归，本日不再触发倒反天罡。</>}
         confirmLabel="归还"
         cancelLabel="再玩一会"
+      />
+
+      {/* 朱印盖章动画 — 心情切换时短暂浮现（戏精政务的小仪式）*/}
+      <AnimatePresence>
+        {stamp && (
+          <motion.div
+            key={stamp.key}
+            aria-hidden
+            initial={{ scale: 0, rotate: -18, opacity: 0 }}
+            animate={{
+              scale: [0, 1.15, 1, 1],
+              rotate: [-18, -8, -10, -10],
+              opacity: [0, 1, 1, 0],
+            }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1], times: [0, 0.35, 0.55, 1] }}
+            className="absolute inset-0 z-[55] pointer-events-none flex items-center justify-center"
+          >
+            <div
+              className="relative flex items-center justify-center"
+              style={{
+                width: 132,
+                height: 132,
+                borderRadius: '50%',
+                background:
+                  'radial-gradient(circle at 35% 30%, #E85959 0%, #B83333 55%, #6B2323 100%)',
+                boxShadow:
+                  'inset 0 0 0 4px #6B2323, inset 0 0 0 6px #D4A645, 0 8px 28px -4px rgba(139,46,46,0.55)',
+                color: '#FAF6EC',
+                fontSize: 56,
+                lineHeight: '1',
+                textShadow: '0 1px 0 rgba(0,0,0,0.25)',
+              }}
+            >
+              <span style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.25))' }}>
+                {stamp.icon}
+              </span>
+              {/* 朱泥晕开 */}
+              <motion.div
+                className="absolute inset-[-12px] rounded-full pointer-events-none"
+                initial={{ opacity: 0.5, scale: 0.6 }}
+                animate={{ opacity: 0, scale: 1.6 }}
+                transition={{ duration: 0.85, ease: 'easeOut' }}
+                style={{
+                  background:
+                    'radial-gradient(circle, rgba(212,69,69,0.45) 0%, rgba(139,46,46,0.0) 70%)',
+                }}
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 紧急切断朝堂（分手友好）*/}
+      <ConfirmModal
+        open={confirmingDissolve}
+        onCancel={() => !dissolving && setConfirmingDissolve(false)}
+        onConfirm={handleDissolve}
+        emoji="🪦"
+        title="切断朝堂？"
+        body={
+          <>
+            朝堂关系即刻冻结，对方失去访问权限。<br />
+            <b>{DISSOLUTION_GRACE_PERIOD_DAYS} 日宽限期内</b>双方均可下载导出留存。<br />
+            到期后所有奏折、铜钱、恩诏、气象记录全部自动清除。<br />
+            <span className="text-state-danger">温柔告别，互不为难。</span>
+          </>
+        }
+        confirmLabel={dissolving ? '正在切断...' : '切断朝堂'}
+        cancelLabel="再思量"
+        confirmTone="danger"
       />
     </motion.div>
   );
