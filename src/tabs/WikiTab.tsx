@@ -38,12 +38,12 @@ export default function WikiTab() {
     setWishNotes('');
     setWishEmoji('🎁');
     setAddingWish(false);
-    showToast('✨ 已加入许愿池！');
+    showToast('✨ 已记于愿册');
   }
 
   function handleClaim(id: string) {
     dispatch({ type: 'CLAIM_WISHLIST_ITEM', id, claimedBy: currentUser ?? 'husband' });
-    showToast('🎉 已认领！准备给 TA 一个惊喜');
+    showToast('🎉 已暗中领命——给 TA 一个惊喜');
   }
 
   // Wishlist is now per-profile: each side owns their own.
@@ -53,7 +53,7 @@ export default function WikiTab() {
   );
   const isOwnProfile = activeProfileId === currentUser;
   const profileOwnerName = activeProfile?.displayName ?? (activeProfileId === 'wife' ? '老婆' : '老公');
-  const wishlistTitle = isOwnProfile ? '我的许愿池' : `${profileOwnerName}的许愿池`;
+  const wishlistTitle = isOwnProfile ? '朕的愿册' : `${profileOwnerName}的愿册`;
 
   return (
     <motion.div
@@ -61,7 +61,7 @@ export default function WikiTab() {
       animate={{ opacity: 1 }}
       className="flex-1 overflow-y-auto bg-bg-base pb-24"
     >
-      <GlobalHeader title="资料" subtitle="记住细节，才是满分爱情的秘诀 📖" />
+      <GlobalHeader title="档案" subtitle="记得细节，方得满分恩爱 📖" />
 
       <div className="px-5 py-5 space-y-5">
         {/* Profile switcher */}
@@ -99,9 +99,9 @@ export default function WikiTab() {
             <div className="flex items-center gap-3 mb-4">
               <div className="text-4xl">{activeProfile.avatar}</div>
               <div>
-                <h3 className="font-bold text-ink-primary">基础档案</h3>
+                <h3 className="font-bold text-ink-primary">起居档案</h3>
                 <p className="text-xs text-ink-muted">
-                  {canEditProfile ? '点击字段可编辑' : '仅供查阅，不可编辑'}
+                  {canEditProfile ? '点字段即改' : '仅供翻阅，不可改'}
                 </p>
               </div>
             </div>
@@ -165,7 +165,7 @@ export default function WikiTab() {
                 onClick={() => setAddingWish((v) => !v)}
                 className="text-xs font-bold text-brand-ink flex items-center gap-1"
               >
-                <PlusCircle size={14} /> 添加心愿
+                <PlusCircle size={14} /> 添一笔
               </button>
             )}
           </div>
@@ -197,7 +197,7 @@ export default function WikiTab() {
                   <Input
                     value={wishName}
                     onChange={(e) => setWishName(e.target.value)}
-                    placeholder="心愿名称..."
+                    placeholder="心愿一笔..."
                     className="mb-2"
                   />
                   <Input
@@ -221,7 +221,7 @@ export default function WikiTab() {
                       onClick={handleAddWish}
                       disabled={!wishName.trim()}
                     >
-                      加入 💝
+                      记入 💝
                     </Button>
                   </div>
                 </Card>
@@ -232,12 +232,12 @@ export default function WikiTab() {
           {visibleWishlist.length === 0 && !addingWish && (
             <Card padding="lg" tone="surface">
               <EmptyState
-                icon="🌱"
-                title="许愿池是空的"
+                icon="📝"
+                title="愿册尚空"
                 description={
                   isOwnProfile
-                    ? '添加第一个心愿吧'
-                    : `等 ${profileOwnerName} 添加心愿吧`
+                    ? '添第一笔吧'
+                    : `${profileOwnerName} 尚未着墨`
                 }
               />
             </Card>
@@ -264,7 +264,7 @@ export default function WikiTab() {
                     )}
                     {item.claimedBy && (
                       <div className="text-xs text-state-success font-bold mt-1">
-                        ✅ 已被认领
+                        ✅ 已暗中领命
                       </div>
                     )}
                   </div>
@@ -272,18 +272,18 @@ export default function WikiTab() {
                 <div className="flex flex-col gap-1.5 items-end">
                   {!isOwnProfile && !item.claimedBy && (
                     <Button size="sm" onClick={() => handleClaim(item.id)}>
-                      我来认领
+                      我来还愿
                     </Button>
                   )}
                   {isOwnProfile && (
                     <button
                       onClick={() => {
                         dispatch({ type: 'REMOVE_WISHLIST_ITEM', id: item.id });
-                        showToast('已从许愿池移除');
+                        showToast('🗑️ 已从愿册撤去');
                       }}
                       className="text-ink-muted text-xs font-bold hover:text-state-danger"
                     >
-                      删除
+                      撤去
                     </button>
                   )}
                 </div>

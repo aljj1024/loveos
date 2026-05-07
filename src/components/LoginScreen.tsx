@@ -23,7 +23,7 @@ export default function LoginScreen() {
       <div className="mb-10 text-center">
         <div className="text-5xl mb-3">💑</div>
         <h1 className="text-3xl font-black text-gray-800 tracking-tight">LoveOS</h1>
-        <p className="text-gray-400 text-sm font-medium mt-2">家庭联机生活系统</p>
+        <p className="text-gray-400 text-sm font-medium mt-2">两个人的戏精朝廷</p>
       </div>
 
       <div className="w-full max-w-sm space-y-4">
@@ -45,15 +45,15 @@ export default function LoginScreen() {
               <div className="flex items-center gap-2 mb-1">
                 <span className="font-black text-lg text-gray-800">{profile?.displayName}</span>
                 <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${tagBg} ${tagText}`}>
-                  {id === 'wife' ? '👑 主审' : '📝 申请人'}
+                  {id === 'wife' ? '👑 准奏权' : '📝 上奏权'}
                 </span>
               </div>
               <p className="text-xs text-gray-400 font-medium truncate">
-                当前状态：{mood.current.icon} {mood.current.text}
+                当前圣意：{mood.current.icon} {mood.current.text}
               </p>
             </div>
             <div className={`bg-gradient-to-br ${btnBg} text-white text-xs font-black px-4 py-2 rounded-xl shadow-md ${shadow} flex-shrink-0`}>
-              进入 →
+              临朝 →
             </div>
           </button>
         ))}

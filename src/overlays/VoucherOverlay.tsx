@@ -19,7 +19,7 @@ export default function VoucherOverlay() {
   function handleRequestRedeem() {
     dispatch({ type: 'REDEEM_VOUCHER', voucherId: voucher!.id });
     close();
-    showToast('📣 已申请核销，等待对方确认！');
+    showToast('📣 已请核销，待对方圣允');
   }
 
   return (
@@ -43,7 +43,7 @@ export default function VoucherOverlay() {
         {/* Voucher body — dashed border ticket vibe */}
         <div className="border-2 border-dashed border-brand-accent rounded-button p-4 mb-5 bg-brand-accent-soft">
           <div className="flex items-center justify-between">
-            <div className="text-xs text-brand-ink font-bold">凭证编号</div>
+            <div className="text-xs text-brand-ink font-bold">恩诏编号</div>
             <div className="text-xs text-brand-ink font-mono font-bold tracking-wider">
               {voucher.id.slice(-8).toUpperCase()}
             </div>
@@ -59,24 +59,24 @@ export default function VoucherOverlay() {
               }`}
             >
               {voucher.isRedeemed
-                ? '已使用'
+                ? '已用'
                 : voucher.pendingRedemption
-                ? '待对方确认'
-                : '未使用'}
+                ? '待对方圣允'
+                : '未用'}
             </span>
           </div>
         </div>
 
         {!voucher.isRedeemed && !voucher.pendingRedemption && (
           <Button fullWidth size="lg" onClick={handleRequestRedeem}>
-            申请核销 ✂️
+            请核销 ✂️
           </Button>
         )}
 
         {voucher.pendingRedemption && (
           <div className="w-full bg-state-warning/15 border border-state-warning/30 rounded-button py-3 px-4 flex items-center justify-center gap-2">
             <Clock size={16} className="text-state-warning animate-pulse" />
-            <span className="text-sm font-bold text-state-warning">等待对方确认中...</span>
+            <span className="text-sm font-bold text-state-warning">恭候圣允中...</span>
           </div>
         )}
 

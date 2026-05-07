@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ReactNode, CSSProperties } from 'react';
 
 type Size = 'sm' | 'md' | 'lg' | 'xl';
 
@@ -19,6 +19,11 @@ const sizeClass: Record<Size, string> = {
   xl: 'w-20 h-20 text-4xl',
 };
 
+const ringStyle: CSSProperties = {
+  boxShadow:
+    '0 0 0 2px var(--bg-surface), 0 0 0 4px var(--wood-edge), 0 2px 4px rgba(0,0,0,0.08)',
+};
+
 export default function Avatar({
   emoji,
   src,
@@ -30,9 +35,8 @@ export default function Avatar({
 }: AvatarProps) {
   return (
     <div
-      className={`inline-flex items-center justify-center rounded-pill bg-brand-accent-soft text-brand-ink overflow-hidden ${
-        ring ? 'ring-2 ring-brand-soft' : ''
-      } ${sizeClass[size]} ${className}`}
+      className={`inline-flex items-center justify-center rounded-pill bg-brand-accent-soft text-brand-ink overflow-hidden ${sizeClass[size]} ${className}`}
+      style={ring ? ringStyle : undefined}
     >
       {src ? (
         <img src={src} alt={alt} className="w-full h-full object-cover" />

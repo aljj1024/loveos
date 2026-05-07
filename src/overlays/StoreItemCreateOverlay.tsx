@@ -85,7 +85,7 @@ export default function StoreItemCreateOverlay() {
       createdBy: currentUser ?? undefined,
     };
     dispatch({ type: 'ADD_STORE_ITEM', item });
-    showToast(`✨ 已上架商品「${item.title}」`);
+    showToast(`✨ 新设贡品「${item.title}」`);
     close();
   }
 
@@ -93,7 +93,7 @@ export default function StoreItemCreateOverlay() {
     <Drawer open onClose={close} side="bottom" className="max-h-[90svh]">
       <div className="flex flex-col max-h-[90svh]">
         <div className="flex items-center justify-between px-5 py-4 border-b border-line-subtle">
-          <h2 className="text-lg font-bold text-ink-primary">+ 自定义商品</h2>
+          <h2 className="text-lg font-bold text-ink-primary">+ 自设贡品</h2>
           <button onClick={close} className="text-ink-muted active:scale-90 transition-transform">
             <X size={20} />
           </button>
@@ -107,15 +107,15 @@ export default function StoreItemCreateOverlay() {
                 className={`w-16 h-16 ${colorClass} rounded-pill flex items-center justify-center text-3xl`}
                 style={{
                   boxShadow:
-                    'inset 0 1px 0 rgba(255,255,255,0.6), 0 4px 12px -4px rgba(167,139,250,0.4)',
+                    'inset 0 1px 0 rgba(255,255,255,0.6), 0 4px 12px -4px rgba(212,166,69,0.4)',
                 }}
               >
                 {emoji}
               </div>
               <div className="font-bold text-sm text-ink-primary text-center">
-                {title.trim() || '商品名称'}
+                {title.trim() || '贡品名称'}
               </div>
-              <div className="text-xs font-bold text-brand-ink">{numericPrice} 金币</div>
+              <div className="text-xs font-bold text-brand-ink">{numericPrice} 🪙</div>
             </div>
           </div>
 
@@ -187,7 +187,7 @@ export default function StoreItemCreateOverlay() {
                   >
                     <div className="text-sm font-bold">{t.label}</div>
                     <div className={`text-xs mt-0.5 ${active ? 'text-white/80' : 'text-ink-muted'}`}>
-                      {t.hint} · ~{tierPrice} 金币
+                      {t.hint} · ~{tierPrice} 🪙
                     </div>
                   </motion.button>
                 );
@@ -207,13 +207,13 @@ export default function StoreItemCreateOverlay() {
                 className="pr-16"
               />
               <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-ink-muted font-bold pointer-events-none">
-                金币
+                🪙
               </span>
             </div>
             <p className="text-[11px] text-ink-muted mt-1.5 leading-relaxed">
               📊 {sampleCount > 0
-                ? `参考：你最近 ${sampleCount} 个完成任务的奖励中位数 ${baseline} 金币`
-                : `还没完成过任务，使用默认基线 ${baseline} 金币`}
+                ? `参考：近 ${sampleCount} 道旨意悬赏中位数 ${baseline} 🪙`
+                : `尚无旨意完成记录，默认基线 ${baseline} 🪙`}
             </p>
           </div>
         </div>
@@ -223,7 +223,7 @@ export default function StoreItemCreateOverlay() {
             取消
           </Button>
           <Button fullWidth onClick={submit} disabled={!canSubmit}>
-            上架商品
+            颁布贡品
           </Button>
         </div>
       </div>

@@ -1,6 +1,7 @@
 export { default as Button } from './Button';
 export { default as Card } from './Card';
 export { default as Modal } from './Modal';
+export { default as ConfirmModal } from './ConfirmModal';
 export { default as Drawer } from './Drawer';
 export { default as Tab } from './Tab';
 export type { TabItem } from './Tab';

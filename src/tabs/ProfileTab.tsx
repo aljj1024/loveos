@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, Moon, Sun, Repeat } from 'lucide-react';
+import { ChevronRight, Moon, Sun } from 'lucide-react';
 import GlobalHeader from '../components/GlobalHeader';
 import { useAppState, useAppDispatch, useToast, useCurrentMood } from '../context/AppContext';
 import { useMoodTimer } from '../hooks/useMoodTimer';
+import { useIsHusband } from '../hooks/useIsHusband';
 import { DEFAULT_MOODS } from '../constants';
-import { Card } from '../components/ui';
+import { Card, ConfirmModal, Button } from '../components/ui';
 
 export default function ProfileTab() {
   const { points, currentUser, wikiProfiles, flipMode } = useAppState();
@@ -13,11 +14,14 @@ export default function ProfileTab() {
   const showToast = useToast();
   const currentMood = useCurrentMood();
   const moodCountdown = useMoodTimer();
+  const isHusband = useIsHusband();
   const [truceResult, setTruceResult] = useState<string | null>(null);
   const [isSpinning, setIsSpinning] = useState(false);
   const [isDark, setIsDark] = useState(() =>
     typeof document !== 'undefined' && document.documentElement.classList.contains('dark')
   );
+  const [confirmingReset, setConfirmingReset] = useState(false);
+  const [confirmingEndFlip, setConfirmingEndFlip] = useState(false);
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', isDark);
@@ -38,7 +42,7 @@ export default function ProfileTab() {
 
   function handleMoodSelect(m: typeof DEFAULT_MOODS[0]) {
     dispatch({ type: 'SET_MOOD', mood: m });
-    showToast(`${m.icon} 状态已更新！已同步给${partnerName}`);
+    showToast(`${m.icon} 圣意已更新，已同步给${partnerName}`);
   }
 
   function handleTruce() {
@@ -51,7 +55,7 @@ export default function ProfileTab() {
         Math.random() > 0.5 ? `${husbandName}先道歉 🙇‍♂️` : `${wifeName}先道歉 🙇‍♀️`;
       setTruceResult(who);
       setIsSpinning(false);
-      showToast(`裁判结果：${who}`);
+      showToast(`天意已定：${who}`);
     }, 1500);
   }
 
@@ -61,16 +65,16 @@ export default function ProfileTab() {
       animate={{ opacity: 1 }}
       className="flex-1 overflow-y-auto bg-bg-base pb-24"
     >
-      <GlobalHeader title="状态" subtitle="随时更新心情，减少沟通摩擦 📡" />
+      <GlobalHeader title="气象" subtitle="圣意随时同步，减少朝堂摩擦 🌤️" />
 
       <div className="px-5 py-5 space-y-4">
         {/* 心情选择 */}
-        <Card padding="lg" tone="surface">
+        <Card padding="lg" tone="surface" ornate>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-ink-primary font-bold">今天心情如何</h2>
+            <h2 className="text-ink-primary font-bold font-display tracking-wide">今日圣意如何</h2>
             <div className="text-xs text-ink-muted font-medium">{moodCountdown} 自动重置</div>
           </div>
-          <p className="text-xs text-ink-muted mb-3">点击切换当前状态，对方会立即看到</p>
+          <p className="text-xs text-ink-muted mb-3">一点即换，对方瞬时知晓</p>
           <div className="grid grid-cols-2 gap-2.5">
             {availableMoods.map((m) => {
               const active = currentMood.current.id === m.id;
@@ -89,7 +93,7 @@ export default function ProfileTab() {
                     active
                       ? {
                           boxShadow:
-                            '0 6px 18px -4px rgba(167,139,250,0.4), inset 0 1px 0 rgba(255,255,255,0.45)',
+                            '0 4px 10px -2px rgba(139,46,46,0.3), inset 0 1px 0 rgba(255,255,255,0.45)',
                         }
                       : undefined
                   }
@@ -103,18 +107,17 @@ export default function ProfileTab() {
         </Card>
 
         {/* 赛博休战庭 */}
-        <Card padding="lg" tone="surface">
-          <h3 className="font-bold text-ink-primary mb-1">🏳️ 赛博休战庭</h3>
-          <p className="text-xs text-ink-muted mb-3">冷战了？让命运来决定谁先认错</p>
-          <motion.button
+        <Card padding="lg" tone="surface" ornate>
+          <h3 className="font-bold text-ink-primary mb-1 font-display tracking-wide">🏳️ 赛博休战庭</h3>
+          <p className="text-xs text-ink-muted mb-3">朝中冷战？由天意定谁先认错</p>
+          <Button
             onClick={handleTruce}
             disabled={isSpinning}
-            whileTap={{ scale: 0.96 }}
-            transition={{ type: 'spring', stiffness: 380, damping: 22 }}
-            className="w-full bg-gradient-to-r from-brand to-brand-accent text-white font-bold py-3 rounded-button shadow-card disabled:opacity-60"
+            fullWidth
+            variant="accent"
           >
-            {isSpinning ? '🎲 命运转动中...' : '一键破冰！抽签决定 🎲'}
-          </motion.button>
+            {isSpinning ? '🎲 天意推演中...' : '一键问卦！由天意定夺 🎲'}
+          </Button>
           <AnimatePresence>
             {truceResult && (
               <motion.div
@@ -125,109 +128,106 @@ export default function ProfileTab() {
                 className="mt-3 bg-brand-accent-soft rounded-button p-4 text-center border-2 border-brand-accent"
               >
                 <div className="font-bold text-base text-brand-ink">{truceResult}</div>
-                <p className="text-xs text-ink-muted mt-1">裁判命令不可抗拒</p>
+                <p className="text-xs text-ink-muted mt-1">天意不可抗</p>
               </motion.div>
             )}
           </AnimatePresence>
         </Card>
 
-        {/* 金币 */}
-        <Card ornate padding="lg" tone="surface">
-          <h3 className="font-bold text-ink-primary mb-3">💰 我的金币</h3>
-          <div
-            className="relative overflow-hidden bg-gradient-to-br from-brand-accent-soft via-brand-soft to-brand-accent-soft rounded-card p-4 border-2 border-brand-accent"
-            style={{
-              boxShadow:
-                'inset 0 1px 0 rgba(255,255,255,0.6), 0 8px 24px -8px rgba(167,139,250,0.35)',
-            }}
-          >
+        {/* 内帑（铜钱罐） */}
+        {isHusband ? (
+          <Card padding="lg" tone="surface" ornate>
+            <h3 className="font-bold text-ink-primary mb-3 font-display tracking-wide">🪙 朕的内帑</h3>
             <div
-              aria-hidden
-              className="absolute -top-8 -right-8 w-24 h-24 rounded-pill opacity-50"
-              style={{ background: 'radial-gradient(circle, rgba(255,215,0,0.4) 0%, transparent 70%)' }}
-            />
-            <div className="relative text-4xl font-black text-brand-ink text-center tracking-wider drop-shadow-sm">
-              {points}
-            </div>
-            <div className="relative text-xs text-ink-muted font-bold text-center mt-1 tracking-widest">
-              ◆ 当前余额 ◆
-            </div>
-          </div>
-          <p className="text-xs text-ink-muted mt-3">在「宝物」中接任务赚取金币，或在商店兑换特权</p>
-        </Card>
-
-        {/* 倒反天罡 toggle (special game-mode card) */}
-        <motion.button
-          onClick={() => {
-            dispatch({ type: 'TOGGLE_FLIP_MODE' });
-            showToast(flipMode ? '🌅 已恢复正常秩序' : '🔄 倒反天罡，角色互换！');
-          }}
-          whileTap={{ scale: 0.98 }}
-          transition={{ type: 'spring', stiffness: 380, damping: 22 }}
-          className={`relative overflow-hidden w-full rounded-card p-4 flex items-center justify-between text-left transition-colors ${
-            flipMode
-              ? 'bg-gradient-to-r from-brand to-brand-ink text-white'
-              : 'bg-bg-surface border border-line-subtle text-ink-primary'
-          }`}
-          style={
-            flipMode
-              ? {
-                  boxShadow:
-                    '0 8px 24px -6px rgba(167,139,250,0.55), inset 0 1px 0 rgba(255,255,255,0.35)',
-                }
-              : undefined
-          }
-        >
-          {flipMode && (
-            <div
-              aria-hidden
-              className="absolute inset-0 opacity-30 pointer-events-none"
+              className="relative overflow-hidden rounded-card p-5 border-2"
               style={{
                 background:
-                  'linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.3) 50%, transparent 70%)',
+                  'linear-gradient(160deg, #F5E8C8 0%, #D4A645 50%, #F5E8C8 100%)',
+                borderColor: 'var(--wood-edge)',
+                boxShadow:
+                  'inset 0 1px 0 rgba(255,255,255,0.6), 0 8px 20px -8px rgba(212,166,69,0.5)',
               }}
-            />
-          )}
-          <div className="relative flex items-center gap-3">
-            <div
-              className={`w-10 h-10 rounded-pill flex items-center justify-center ${
-                flipMode ? 'bg-white/25 text-white' : 'bg-brand-soft text-brand-ink'
-              }`}
             >
-              <motion.div
-                animate={{ rotate: flipMode ? 180 : 0 }}
-                transition={{ type: 'spring', stiffness: 220, damping: 18 }}
-              >
-                <Repeat size={18} />
-              </motion.div>
-            </div>
-            <div>
-              <div className="text-sm font-bold">倒反天罡模式</div>
               <div
-                className={`text-xs mt-0.5 font-semibold ${
-                  flipMode ? 'text-white/85' : 'text-ink-muted'
-                }`}
+                aria-hidden
+                className="absolute -top-8 -right-8 w-24 h-24 rounded-pill opacity-50"
+                style={{ background: 'radial-gradient(circle, rgba(255,235,170,0.6) 0%, transparent 70%)' }}
+              />
+              <div
+                className="relative text-5xl font-black text-center tracking-wider tabular-nums"
+                style={{ color: '#5C2F2F', fontFamily: 'var(--font-display)' }}
               >
-                {flipMode
-                  ? '🔄 角色已翻转 · 老婆下苦差，老公做审批'
-                  : '开启后角色互换，老婆也能赚金币'}
+                {points}
+              </div>
+              <div className="relative text-xs text-ink-secondary font-bold text-center mt-1 tracking-widest">
+                ◆ 当前铜钱 ◆
               </div>
             </div>
-          </div>
-          <div
-            className={`relative ml-2 w-10 h-6 rounded-pill p-0.5 flex-shrink-0 ${
-              flipMode ? 'bg-white/30' : 'bg-line-subtle'
-            }`}
-          >
-            <motion.div
-              layout
-              transition={{ type: 'spring', stiffness: 380, damping: 26 }}
-              className={`w-5 h-5 rounded-pill ${
-                flipMode ? 'bg-white ml-auto' : 'bg-bg-elevated'
-              }`}
-            />
-          </div>
-        </motion.button>
+            <p className="text-xs text-ink-muted mt-3">去「府库」接旨积铜钱，或在商店赎权</p>
+          </Card>
+        ) : (
+          <Card padding="lg" tone="surface" ornate>
+            <h3 className="font-bold text-ink-secondary mb-2 text-sm font-display tracking-wide">
+              👀 老公的内帑
+            </h3>
+            <div
+              className="rounded-button p-3 flex items-center justify-between"
+              style={{
+                background: 'var(--brand-primary-soft)',
+                border: '1px dashed var(--brand-primary)',
+              }}
+            >
+              <span className="text-2xl">🪙</span>
+              <div className="text-right">
+                <div className="text-2xl font-bold text-brand-ink tabular-nums">{points}</div>
+                <div className="text-[10px] text-ink-muted">皆由老婆朱批所赐</div>
+              </div>
+            </div>
+            <p className="text-[11px] text-ink-muted mt-2">铜钱只属于老公；陛下只需颁旨与阅旨。</p>
+          </Card>
+        )}
+
+        {/* 倒反天罡 · 提前结束 (仅 flipMode 时显示) */}
+        <AnimatePresence>
+          {flipMode && (
+            <motion.button
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              transition={{ type: 'spring', stiffness: 320, damping: 28 }}
+              onClick={() => setConfirmingEndFlip(true)}
+              whileTap={{ scale: 0.98, y: 1 }}
+              className="relative overflow-hidden w-full rounded-card p-4 flex items-center justify-between text-left text-white"
+              style={{
+                background:
+                  'linear-gradient(135deg, #6D4FE0 0%, #8E6BD4 50%, #C58FD8 100%)',
+                boxShadow:
+                  '0 8px 22px -6px rgba(109,79,224,0.55), inset 0 1px 0 rgba(255,255,255,0.35)',
+              }}
+            >
+              <div
+                aria-hidden
+                className="absolute inset-0 opacity-30 pointer-events-none"
+                style={{
+                  background:
+                    'linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.3) 50%, transparent 70%)',
+                }}
+              />
+              <div className="relative flex items-center gap-3">
+                <div className="w-10 h-10 rounded-pill flex items-center justify-center bg-white/25 text-white text-xl">
+                  ✦
+                </div>
+                <div>
+                  <div className="text-sm font-bold font-display tracking-wide">权杖倒置中</div>
+                  <div className="text-xs mt-0.5 font-semibold text-white/85">
+                    点击提前归还权杖
+                  </div>
+                </div>
+              </div>
+              <ChevronRight size={18} className="relative text-white/80" />
+            </motion.button>
+          )}
+        </AnimatePresence>
 
         {/* Settings rows */}
         <div className="space-y-2.5">
@@ -247,7 +247,7 @@ export default function ProfileTab() {
             }
             className="w-full bg-bg-surface p-4 rounded-card border border-line-subtle flex justify-between items-center text-sm font-bold text-ink-primary active:bg-brand-soft/40 transition-colors"
           >
-            <span>📊 历史数据</span>
+            <span>📊 起居注</span>
             <ChevronRight size={18} className="text-ink-muted" />
           </button>
           <button
@@ -260,23 +260,56 @@ export default function ProfileTab() {
             }
             className="w-full bg-bg-surface p-4 rounded-card border border-line-subtle flex justify-between items-center text-sm font-bold text-ink-primary active:bg-brand-soft/40 transition-colors"
           >
-            <span>📜 历史申请记录</span>
+            <span>📜 奏折档案</span>
             <ChevronRight size={18} className="text-ink-muted" />
           </button>
           <button
-            onClick={() => {
-              if (confirm('确定要重置所有数据吗？此操作不可撤销。')) {
-                dispatch({ type: 'RESET_APP' });
-                showToast('已重置所有数据');
-              }
-            }}
+            onClick={() => setConfirmingReset(true)}
             className="w-full bg-bg-surface p-4 rounded-card border border-line-subtle flex justify-between items-center text-sm font-bold text-state-danger active:bg-state-danger/10 transition-colors"
           >
-            <span>🗑️ 重置所有数据</span>
+            <span>🗑️ 清空朝堂</span>
             <ChevronRight size={18} className="text-state-danger/70" />
           </button>
         </div>
       </div>
+
+      {/* 重置确认 */}
+      <ConfirmModal
+        open={confirmingReset}
+        onCancel={() => setConfirmingReset(false)}
+        onConfirm={() => {
+          dispatch({ type: 'RESET_APP' });
+          showToast('🗑️ 朝堂已清空');
+          setConfirmingReset(false);
+        }}
+        emoji="⚠️"
+        title="确定清空全朝？"
+        body={
+          <>
+            所有奏折、铜钱、恩诏、气象记录都会清空。<br />
+            <b className="text-state-danger">此事一举不可逆。</b>
+          </>
+        }
+        confirmLabel="清空"
+        cancelLabel="再思量"
+        confirmTone="danger"
+      />
+
+      {/* 提前结束倒反天罡 */}
+      <ConfirmModal
+        open={confirmingEndFlip}
+        onCancel={() => setConfirmingEndFlip(false)}
+        onConfirm={() => {
+          dispatch({ type: 'TOGGLE_FLIP_MODE' });
+          showToast('🌅 权杖已归还，秩序恢复');
+          setConfirmingEndFlip(false);
+        }}
+        emoji="✦"
+        title="提前归还权杖？"
+        body={<>归还后秩序立刻回归，本日不再触发倒反天罡。</>}
+        confirmLabel="归还"
+        cancelLabel="再玩一会"
+      />
     </motion.div>
   );
 }

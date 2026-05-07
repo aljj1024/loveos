@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Coins, PlusCircle, CheckCircle2, Clock, Trophy, X } from 'lucide-react';
+import { PlusCircle, CheckCircle2, Clock, Trophy, X } from 'lucide-react';
 import GlobalHeader from '../components/GlobalHeader';
 import { useAppState, useAppDispatch, useToast } from '../context/AppContext';
-import type { Voucher } from '../types';
-import { Card, Badge, Button, Tab, EmptyState } from '../components/ui';
+import { useIsHusband } from '../hooks/useIsHusband';
+import { useIsApprover } from '../hooks/useEffectiveRole';
+import type { StoreItem, Voucher } from '../types';
+import { Card, Badge, Button, Tab, EmptyState, ConfirmModal } from '../components/ui';
 
 type EcoMode = 'tasks' | 'store';
 
@@ -12,7 +14,11 @@ export default function EconomyTab() {
   const { tasks, storeItems, vouchers, points, currentUser } = useAppState();
   const dispatch = useAppDispatch();
   const showToast = useToast();
+  const isHusband = useIsHusband();
+  const isApprover = useIsApprover();
   const [ecoMode, setEcoMode] = useState<EcoMode>('tasks');
+  const [confirmingBuy, setConfirmingBuy] = useState<StoreItem | null>(null);
+  const [confirmingDelete, setConfirmingDelete] = useState<StoreItem | null>(null);
 
   const myActiveTasks = tasks.filter(
     (t) => t.acceptedBy === currentUser && t.status === 'accepted'
@@ -25,37 +31,37 @@ export default function EconomyTab() {
 
   function handleAccept(taskId: string, reward: number) {
     dispatch({ type: 'ACCEPT_TASK', taskId });
-    showToast(`✅ 接单成功！完成后将获得 ${reward} 金币`);
+    showToast(`✅ 已接旨！缴差后获 ${reward} 🪙`);
   }
 
   function handleComplete(taskId: string) {
     dispatch({ type: 'COMPLETE_TASK', taskId });
-    showToast('📤 已提交验收，等待对方确认！');
+    showToast('📤 已复命，待陛下阅旨');
   }
 
   function handleVerify(taskId: string, reward: number) {
     dispatch({ type: 'VERIFY_TASK', taskId });
-    showToast(`🎉 验收通过！+${reward} 金币已到账`);
+    showToast(`🎉 阅旨通过！+${reward} 🪙 已入库`);
   }
 
-  function handleBuy(itemId: string, cost: number, title: string, icon: string) {
-    if (points < cost) {
-      showToast('❌ 金币不足，快去接任务吧！');
+  function performBuy(item: StoreItem) {
+    if (points < item.cost) {
+      showToast('❌ 内帑空虚，接旨任务方可补给');
       return;
     }
     const voucher: Voucher = {
       id: `voucher_${Date.now()}`,
-      itemId,
-      itemTitle: title,
-      itemIcon: icon,
+      itemId: item.id,
+      itemTitle: item.title,
+      itemIcon: item.icon,
       purchasedAt: new Date().toISOString(),
       purchasedBy: currentUser ?? undefined,
       isRedeemed: false,
       pendingRedemption: false,
     };
-    dispatch({ type: 'BUY_ITEM', itemId, voucher });
+    dispatch({ type: 'BUY_ITEM', itemId: item.id, voucher });
     dispatch({ type: 'OPEN_OVERLAY', overlay: 'voucher', payload: { voucherId: voucher.id } });
-    showToast(`🎁 兑换成功！获得「${title}」`);
+    showToast(`🎁 已得「${item.title}」恩诏`);
   }
 
   return (
@@ -65,19 +71,19 @@ export default function EconomyTab() {
       className="flex-1 overflow-y-auto bg-bg-base pb-24"
     >
       <GlobalHeader
-        title="宝物"
+        title="府库"
         subtitle={
-          currentUser === 'wife'
-            ? '发布任务，让老公多做贡献 💪'
-            : '多接任务多赚金币，兑换特权 💰'
+          isApprover
+            ? '颁布旨意，老公接旨听差 💪'
+            : '多接旨意多积铜钱，兑权赎名 🪙'
         }
       />
 
       <div className="px-5 py-4 flex justify-center">
         <Tab<EcoMode>
           items={[
-            { id: 'tasks', label: '📋 任务广场' },
-            { id: 'store', label: '🎁 兑换商店' },
+            { id: 'tasks', label: '📋 旨意广场' },
+            { id: 'store', label: '🪙 贡品商店' },
           ]}
           value={ecoMode}
           onChange={setEcoMode}
@@ -87,19 +93,21 @@ export default function EconomyTab() {
 
       {ecoMode === 'tasks' && (
         <div className="px-5 space-y-4">
-          <Button
-            onClick={() => dispatch({ type: 'OPEN_OVERLAY', overlay: 'taskCreate' })}
-            variant="secondary"
-            fullWidth
-            className="border-2 border-dashed border-brand/40"
-          >
-            <PlusCircle size={18} /> 发布新任务
-          </Button>
+          {isApprover && (
+            <Button
+              onClick={() => dispatch({ type: 'OPEN_OVERLAY', overlay: 'taskCreate' })}
+              variant="secondary"
+              fullWidth
+              className="border-2 border-dashed border-brand/40"
+            >
+              <PlusCircle size={18} /> 颁发旨意
+            </Button>
+          )}
 
           {myActiveTasks.length > 0 && (
             <section>
               <h3 className="font-bold text-ink-secondary text-sm mb-2 flex items-center gap-1.5">
-                <Clock size={14} className="text-state-info" /> 我的任务
+                <Clock size={14} className="text-state-info" /> 已接旨意
               </h3>
               <div className="space-y-2.5">
                 {myActiveTasks.map((task) => (
@@ -114,12 +122,12 @@ export default function EconomyTab() {
                       <div>
                         <div className="font-bold text-ink-primary text-sm">{task.title}</div>
                         <div className="text-xs text-state-warning font-bold mt-1 flex items-center gap-1">
-                          <Coins size={12} /> +{task.reward} 金币
+                          🪙 +{task.reward}
                         </div>
                       </div>
                     </div>
-                    <Button size="sm" onClick={() => handleComplete(task.id)} className="bg-state-info text-white">
-                      标记完成
+                    <Button size="sm" onClick={() => handleComplete(task.id)} variant="accent">
+                      复命缴差
                     </Button>
                   </Card>
                 ))}
@@ -130,7 +138,7 @@ export default function EconomyTab() {
           {pendingVerifyByMe.length > 0 && (
             <section>
               <h3 className="font-bold text-ink-secondary text-sm mb-2 flex items-center gap-1.5">
-                <CheckCircle2 size={14} className="text-state-warning" /> 待我验收
+                <CheckCircle2 size={14} className="text-state-warning" /> 待朕阅旨
               </h3>
               <div className="space-y-2.5">
                 {pendingVerifyByMe.map((task) => (
@@ -145,7 +153,7 @@ export default function EconomyTab() {
                       <div>
                         <div className="font-bold text-ink-primary text-sm">{task.title}</div>
                         <div className="text-xs text-state-warning font-bold mt-1 flex items-center gap-1">
-                          <Coins size={12} /> +{task.reward} 金币
+                          🪙 +{task.reward}
                         </div>
                       </div>
                     </div>
@@ -153,11 +161,11 @@ export default function EconomyTab() {
                       <Button
                         size="sm"
                         onClick={() => handleVerify(task.id, task.reward)}
-                        className="bg-state-success text-white"
+                        variant="primary"
                       >
-                        ✅ 通过
+                        ✅ 准奏
                       </Button>
-                      <span className="text-[10px] text-state-warning font-bold">待验收</span>
+                      <span className="text-[10px] text-state-warning font-bold">待阅旨</span>
                     </div>
                   </Card>
                 ))}
@@ -168,7 +176,7 @@ export default function EconomyTab() {
           {openTasks.length > 0 && (
             <section>
               <h3 className="font-bold text-ink-secondary text-sm mb-2 flex items-center gap-1.5">
-                <Coins size={14} className="text-state-warning" /> 可接任务
+                🪙 待领旨意
               </h3>
               <div className="space-y-2.5">
                 {openTasks.map((task) => (
@@ -185,16 +193,16 @@ export default function EconomyTab() {
                         <div className="font-bold text-ink-primary text-sm">{task.title}</div>
                         {task.sourceApprovalId && (
                           <div className="text-[11px] text-state-warning font-bold mt-0.5">
-                            📎 申请条件任务
+                            📎 圣旨附条件
                           </div>
                         )}
                         <div className="text-xs text-state-warning font-bold mt-1 flex items-center gap-1">
-                          <Coins size={12} /> +{task.reward} 金币
+                          🪙 +{task.reward}
                         </div>
                       </div>
                     </div>
                     <Button size="sm" onClick={() => handleAccept(task.id, task.reward)}>
-                      接单
+                      接旨
                     </Button>
                   </Card>
                 ))}
@@ -207,9 +215,13 @@ export default function EconomyTab() {
             pendingVerifyByMe.length === 0 && (
               <Card padding="lg" tone="surface">
                 <EmptyState
-                  icon="🎊"
-                  title="所有任务都完成啦！"
-                  description="发布新任务继续赚金币"
+                  icon="📜"
+                  title={isApprover ? '朝堂清净，无事可禀' : '万事已毕，请陛下颁旨'}
+                  description={
+                    isApprover
+                      ? '颁布新旨，老公听差'
+                      : '静候新旨颁布'
+                  }
                 />
               </Card>
             )}
@@ -217,7 +229,7 @@ export default function EconomyTab() {
           {doneTasks.length > 0 && (
             <section className="opacity-60">
               <h3 className="font-bold text-ink-muted text-sm mb-2 flex items-center gap-1.5">
-                <CheckCircle2 size={14} className="text-state-success" /> 已完成
+                <CheckCircle2 size={14} className="text-state-success" /> 已结案
               </h3>
               <div className="space-y-1.5">
                 {doneTasks.map((task) => (
@@ -253,14 +265,11 @@ export default function EconomyTab() {
                 tone="surface"
                 className="relative flex flex-col items-center text-center"
               >
-                {item.isCustom && (
+                {item.isCustom && isApprover && (
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (confirm(`删除「${item.title}」？`)) {
-                        dispatch({ type: 'REMOVE_STORE_ITEM', itemId: item.id });
-                        showToast('🗑️ 已下架');
-                      }
+                      setConfirmingDelete(item);
                     }}
                     aria-label={`删除 ${item.title}`}
                     className="absolute top-1.5 right-1.5 w-5 h-5 rounded-pill bg-bg-base/90 text-ink-muted flex items-center justify-center active:scale-90 transition-transform z-10 hover:text-state-danger"
@@ -269,45 +278,60 @@ export default function EconomyTab() {
                   </button>
                 )}
                 <div
-                  className={`w-14 h-14 ${item.colorClass} rounded-pill flex items-center justify-center mb-2.5 text-2xl shadow-inner`}
+                  className={`w-14 h-14 ${item.colorClass} rounded-pill flex items-center justify-center mb-2.5 text-2xl`}
                   style={{
                     boxShadow:
-                      'inset 0 1px 0 rgba(255,255,255,0.6), 0 4px 12px -4px rgba(167,139,250,0.4)',
+                      'inset 0 1px 0 rgba(255,255,255,0.6), 0 4px 10px -4px rgba(139,46,46,0.3)',
                   }}
                 >
                   {item.icon}
                 </div>
                 <div className="font-bold text-ink-primary text-sm mb-1 line-clamp-1">{item.title}</div>
                 <div className="text-xs font-bold text-brand-ink mb-3 flex items-center gap-1">
-                  <Coins size={11} /> {item.cost}
+                  🪙 {item.cost}
                 </div>
-                <Button
-                  size="sm"
-                  fullWidth
-                  variant={points >= item.cost ? 'primary' : 'secondary'}
-                  disabled={points < item.cost}
-                  onClick={() => handleBuy(item.id, item.cost, item.title, item.icon)}
-                >
-                  {points >= item.cost ? '立即兑换' : '金币不足'}
-                </Button>
+                {isHusband ? (
+                  <Button
+                    size="sm"
+                    fullWidth
+                    variant={points >= item.cost ? 'accent' : 'secondary'}
+                    disabled={points < item.cost}
+                    onClick={() => setConfirmingBuy(item)}
+                  >
+                    {points >= item.cost ? '赎权 🪙' : '内帑不足'}
+                  </Button>
+                ) : (
+                  <div
+                    className="w-full text-[11px] font-bold text-center py-2 rounded-button"
+                    style={{
+                      background: 'var(--brand-primary-soft)',
+                      color: 'var(--brand-ink)',
+                      border: '1px dashed var(--brand-primary)',
+                    }}
+                  >
+                    📌 待陛下赎权
+                  </div>
+                )}
               </Card>
             ))}
 
-            {/* + 自定义商品 入口 */}
-            <motion.button
-              onClick={() => dispatch({ type: 'OPEN_OVERLAY', overlay: 'storeItemCreate' })}
-              whileTap={{ scale: 0.97 }}
-              transition={{ type: 'spring', stiffness: 380, damping: 22 }}
-              className="rounded-card border-2 border-dashed border-brand/40 bg-brand-soft/30 flex flex-col items-center justify-center gap-2 py-6 text-brand-ink active:bg-brand-soft/50 transition-colors min-h-[180px]"
-            >
-              <div className="w-14 h-14 bg-brand-soft rounded-pill flex items-center justify-center">
-                <PlusCircle size={26} />
-              </div>
-              <div className="font-bold text-sm">自定义商品</div>
-              <div className="text-[10px] text-ink-muted px-3 text-center">
-                自己上架奖励，价格自己定
-              </div>
-            </motion.button>
+            {/* + 自定义商品 入口 — 仅 wife（approver）视角 */}
+            {isApprover && (
+              <motion.button
+                onClick={() => dispatch({ type: 'OPEN_OVERLAY', overlay: 'storeItemCreate' })}
+                whileTap={{ scale: 0.97 }}
+                transition={{ type: 'spring', stiffness: 380, damping: 22 }}
+                className="rounded-card border-2 border-dashed border-brand/40 bg-brand-soft/30 flex flex-col items-center justify-center gap-2 py-6 text-brand-ink active:bg-brand-soft/50 transition-colors min-h-[180px]"
+              >
+                <div className="w-14 h-14 bg-brand-soft rounded-pill flex items-center justify-center">
+                  <PlusCircle size={26} />
+                </div>
+                <div className="font-bold text-sm">设贡品</div>
+                <div className="text-[10px] text-ink-muted px-3 text-center">
+                  老婆定价 · 陛下以钱赎权
+                </div>
+              </motion.button>
+            )}
           </div>
 
           {(() => {
@@ -318,7 +342,7 @@ export default function EconomyTab() {
             return (
               <section>
                 <h3 className="font-bold text-state-warning mb-2 flex items-center gap-2">
-                  ✂️ 待核销确认
+                  ✂️ 恩诏待核
                 </h3>
                 <div className="space-y-2">
                   {pendingConfirm.map((v) => (
@@ -333,7 +357,7 @@ export default function EconomyTab() {
                         <div>
                           <div className="font-bold text-sm text-ink-primary">{v.itemTitle}</div>
                           <div className="text-xs text-state-warning font-bold mt-0.5">
-                            对方申请核销此凭证
+                            对方申请核销此恩诏
                           </div>
                         </div>
                       </div>
@@ -343,11 +367,11 @@ export default function EconomyTab() {
                           size="sm"
                           onClick={() => {
                             dispatch({ type: 'CONFIRM_VOUCHER', voucherId: v.id });
-                            showToast('✅ 已确认核销！');
+                            showToast('✅ 已准核销');
                           }}
-                          className="bg-state-success text-white"
+                          variant="primary"
                         >
-                          ✅ 确认核销
+                          ✅ 准核销
                         </Button>
                         <Button
                           fullWidth
@@ -355,10 +379,10 @@ export default function EconomyTab() {
                           variant="secondary"
                           onClick={() => {
                             dispatch({ type: 'REJECT_VOUCHER', voucherId: v.id });
-                            showToast('❌ 已拒绝核销');
+                            showToast('❌ 已驳核销');
                           }}
                         >
-                          ❌ 拒绝
+                          ❌ 驳回
                         </Button>
                       </div>
                     </Card>
@@ -376,7 +400,7 @@ export default function EconomyTab() {
             return (
               <section>
                 <h3 className="font-bold text-ink-primary mb-2 flex items-center gap-2">
-                  <Trophy size={16} className="text-state-warning" /> 我的凭证
+                  <Trophy size={16} className="text-state-warning" /> 朕的恩诏
                 </h3>
                 <div className="space-y-2">
                   {myVouchers.map((v) => (
@@ -417,7 +441,7 @@ export default function EconomyTab() {
                             : 'brand'
                         }
                       >
-                        {v.isRedeemed ? '已使用' : v.pendingRedemption ? '待确认' : '未使用'}
+                        {v.isRedeemed ? '已用' : v.pendingRedemption ? '待核' : '未用'}
                       </Badge>
                     </Card>
                   ))}
@@ -427,6 +451,53 @@ export default function EconomyTab() {
           })()}
         </div>
       )}
+
+      {/* 兑换二次确认 */}
+      <ConfirmModal
+        open={confirmingBuy !== null}
+        onCancel={() => setConfirmingBuy(null)}
+        onConfirm={() => {
+          if (confirmingBuy) performBuy(confirmingBuy);
+          setConfirmingBuy(null);
+        }}
+        emoji={confirmingBuy?.icon ?? '🪙'}
+        title="确认赎权？"
+        body={
+          confirmingBuy ? (
+            <>
+              确定要花掉 <b className="text-ink-primary">{confirmingBuy.cost} 🪙</b><br />
+              赎得 <b className="text-ink-primary">「{confirmingBuy.title}」</b> 吗？
+            </>
+          ) : null
+        }
+        confirmLabel={confirmingBuy ? `赎权 🪙×${confirmingBuy.cost}` : '赎权'}
+        cancelLabel="再思量"
+      />
+
+      {/* 删除自定义商品确认 */}
+      <ConfirmModal
+        open={confirmingDelete !== null}
+        onCancel={() => setConfirmingDelete(null)}
+        onConfirm={() => {
+          if (confirmingDelete) {
+            dispatch({ type: 'REMOVE_STORE_ITEM', itemId: confirmingDelete.id });
+            showToast('🗑️ 已撤贡');
+          }
+          setConfirmingDelete(null);
+        }}
+        emoji="🗑️"
+        title="撤回此贡品？"
+        body={
+          confirmingDelete ? (
+            <>
+              <b className="text-ink-primary">「{confirmingDelete.title}」</b> 将从贡单中撤去。
+            </>
+          ) : null
+        }
+        confirmLabel="撤贡"
+        cancelLabel="取消"
+        confirmTone="danger"
+      />
     </motion.div>
   );
 }

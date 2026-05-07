@@ -7,10 +7,10 @@ import type { Approval, ApprovalTemplate } from '../types';
 import { Card, Button, Input, Textarea, IconButton } from '../components/ui';
 
 const templateMeta: Record<ApprovalTemplate, { emoji: string; label: string }> = {
-  basketball: { emoji: '🏀', label: '打球申请' },
-  shopping: { emoji: '🛍️', label: '购物报备' },
+  basketball: { emoji: '🏀', label: '打球奏本' },
+  shopping: { emoji: '🛍️', label: '采办报禀' },
   truce: { emoji: '🏳️', label: '赛博休战' },
-  custom: { emoji: '📝', label: '自定义申请' },
+  custom: { emoji: '📝', label: '自拟奏本' },
 };
 
 export default function FormOverlay() {
@@ -41,7 +41,7 @@ export default function FormOverlay() {
     };
     dispatch({ type: 'SUBMIT_APPROVAL', approval });
     dispatch({ type: 'CLOSE_OVERLAY' });
-    showToast('🚀 申请已提交！等待对方审批');
+    showToast('🚀 奏本已递，恭候朱批');
   }
 
   return (
@@ -63,7 +63,7 @@ export default function FormOverlay() {
         </IconButton>
         <h1 className="text-lg font-bold text-ink-primary">
           <span className="mr-1">{meta.emoji}</span>
-          起草申请 · {meta.label}
+          起草奏本 · {meta.label}
         </h1>
       </div>
 
@@ -72,7 +72,7 @@ export default function FormOverlay() {
           {template === 'custom' && (
             <div>
               <label className="block text-xs font-bold text-ink-muted mb-2">
-                申请标题
+                奏本标题
               </label>
               <Input
                 value={title}
@@ -83,16 +83,16 @@ export default function FormOverlay() {
             </div>
           )}
           <div>
-            <label className="block text-xs font-bold text-ink-muted mb-2">事由</label>
+            <label className="block text-xs font-bold text-ink-muted mb-2">启奏</label>
             <Input
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="说明具体原因..."
+              placeholder="禀报具体缘由..."
               required
             />
           </div>
           <div>
-            <label className="block text-xs font-bold text-ink-muted mb-2">时间</label>
+            <label className="block text-xs font-bold text-ink-muted mb-2">时辰</label>
             <Input
               type="datetime-local"
               value={datetime}
@@ -103,19 +103,19 @@ export default function FormOverlay() {
 
         <Card padding="lg" tone="accent" className="border-brand-accent">
           <label className="flex items-center gap-1.5 text-sm font-bold text-brand-ink mb-2">
-            <HeartHandshake size={16} /> 我的诚意（保命必填）
+            <HeartHandshake size={16} /> 臣的诚意（保命必填）
           </label>
           <Textarea
             rows={3}
             value={sincerity}
             onChange={(e) => setSincerity(e.target.value)}
-            placeholder="许诺一些甜头，提高通过率..."
+            placeholder="许些甜头，提高准奏率..."
             required
           />
         </Card>
 
         <Button type="submit" fullWidth size="lg">
-          提交申请 📮
+          递呈奏本 📮
         </Button>
       </form>
     </motion.div>

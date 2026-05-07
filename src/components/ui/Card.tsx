@@ -10,7 +10,9 @@ type CardProps = Omit<HTMLMotionProps<'div'>, 'children'> & {
   padding?: Padding;
   tone?: Tone;
   bordered?: boolean;
+  /** 顶部加一道动森木纹装饰条（替代旧 miHoYo 棱角装饰）。 */
   ornate?: boolean;
+  /** 暖纸纹叠加，给卡片一点手作感。 */
   glassy?: boolean;
 };
 
@@ -26,31 +28,6 @@ const toneClass: Record<Tone, string> = {
   soft: 'bg-brand-soft',
   accent: 'bg-brand-accent-soft',
 };
-
-function Corner({ position }: { position: 'tl' | 'tr' | 'bl' | 'br' }) {
-  const rot = { tl: '0', tr: '90', br: '180', bl: '270' }[position];
-  const pos = {
-    tl: 'top-1.5 left-1.5',
-    tr: 'top-1.5 right-1.5',
-    bl: 'bottom-1.5 left-1.5',
-    br: 'bottom-1.5 right-1.5',
-  }[position];
-  return (
-    <svg
-      className={`absolute ${pos} w-3 h-3 text-brand pointer-events-none`}
-      viewBox="0 0 12 12"
-      fill="none"
-      style={{ transform: `rotate(${rot}deg)` }}
-    >
-      <path
-        d="M0 11 L0 1 Q0 0 1 0 L11 0"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
 
 export default function Card({
   hoverable = false,
@@ -69,27 +46,27 @@ export default function Card({
       transition={{ type: 'spring', stiffness: 380, damping: 28 }}
       className={`relative rounded-card shadow-card ${toneClass[tone]} ${
         bordered ? 'border border-line-subtle' : ''
-      } ${paddingClass[padding]} ${className}`}
+      } ${paddingClass[padding]} ${ornate ? 'overflow-hidden' : ''} ${className}`}
       {...rest}
     >
+      {ornate && (
+        <div
+          aria-hidden
+          className="absolute top-0 left-0 right-0 h-1.5 pointer-events-none"
+          style={{ background: 'var(--wood-strip)' }}
+        />
+      )}
       {glassy && (
         <div
           aria-hidden
           className="absolute inset-0 rounded-card pointer-events-none"
           style={{
-            background:
-              'linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 40%)',
-            mixBlendMode: 'overlay',
+            backgroundImage: 'var(--pattern-paper)',
+            backgroundSize: 'var(--pattern-size, 220px 220px)',
+            mixBlendMode: 'multiply',
+            opacity: 0.7,
           }}
         />
-      )}
-      {ornate && (
-        <>
-          <Corner position="tl" />
-          <Corner position="tr" />
-          <Corner position="bl" />
-          <Corner position="br" />
-        </>
       )}
       <div className="relative">{children}</div>
     </motion.div>

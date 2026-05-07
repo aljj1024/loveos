@@ -74,7 +74,7 @@ export const DEFAULT_WISHLIST: WishlistItem[] = [
   { id: 'w4', name: '联名球鞋', emoji: '👟', notes: '42 码就行', addedAt: new Date(Date.now() - 259200000).toISOString(), addedBy: 'husband' },
 ];
 
-export const TASK_ICONS = ['🧹', '📦', '🍳', '🐕', '🛒', '💊', '🚗', '🌿', '🧺', '💡'];
+export const TASK_ICONS = ['🧹', '📦', '🍳', '🐕', '🛒', '💊', '🚗', '📜', '🧺', '💡'];
 
 export const APPROVAL_TEMPLATES = {
   basketball: {

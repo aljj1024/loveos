@@ -1,15 +1,16 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { X, Coins } from 'lucide-react';
-import { useAppDispatch, useAppState, useToast } from '../context/AppContext';
+import { X } from 'lucide-react';
+import { useAppDispatch, useToast } from '../context/AppContext';
 import { TASK_ICONS } from '../constants';
 import { useTaskRewardBaseline } from '../hooks/useTaskRewardBaseline';
+import { useEffectiveRole } from '../hooks/useEffectiveRole';
 import type { Task } from '../types';
 import { Card, Button, Input, IconButton } from '../components/ui';
 
 export default function TaskCreateOverlay() {
   const dispatch = useAppDispatch();
-  const { currentUser } = useAppState();
+  const effectiveRole = useEffectiveRole();
   const showToast = useToast();
   const { baseline, sampleCount } = useTaskRewardBaseline();
 
@@ -25,13 +26,13 @@ export default function TaskCreateOverlay() {
       title: title.trim(),
       icon,
       reward,
-      createdBy: currentUser ?? 'wife',
+      createdBy: effectiveRole ?? 'wife',
       status: 'open',
       createdAt: new Date().toISOString(),
     };
     dispatch({ type: 'CREATE_TASK', task: newTask });
     dispatch({ type: 'CLOSE_OVERLAY' });
-    showToast(`✅ 任务已发布！悬赏 ${reward} 金币`);
+    showToast(`📜 旨意已颁，悬赏 ${reward} 🪙`);
   }
 
   return (
@@ -51,13 +52,13 @@ export default function TaskCreateOverlay() {
         >
           <X size={20} />
         </IconButton>
-        <h1 className="text-lg font-bold text-ink-primary">发布悬赏任务 💰</h1>
+        <h1 className="text-lg font-bold text-ink-primary font-display tracking-wide">颁发旨意 🪙</h1>
       </div>
 
       <form onSubmit={handleSubmit} className="px-5 py-5 space-y-4 pb-24">
         <Card ornate padding="lg" tone="surface" className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-ink-muted mb-2">任务名称</label>
+            <label className="block text-xs font-bold text-ink-muted mb-2">旨意名称</label>
             <Input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -68,7 +69,7 @@ export default function TaskCreateOverlay() {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-ink-muted mb-2">选择图标</label>
+            <label className="block text-xs font-bold text-ink-muted mb-2">挑选印纹</label>
             <div className="flex flex-wrap gap-2">
               {TASK_ICONS.map((i) => (
                 <motion.button
@@ -91,7 +92,7 @@ export default function TaskCreateOverlay() {
 
           <div>
             <label className="block text-xs font-bold text-ink-muted mb-2">
-              悬赏金币：<span className="text-brand-ink">{reward}</span>
+              悬赏铜钱：<span className="text-brand-ink">{reward} 🪙</span>
             </label>
             <input
               type="range"
@@ -103,13 +104,13 @@ export default function TaskCreateOverlay() {
               className="w-full accent-[var(--brand-primary)]"
             />
             <div className="flex justify-between text-[11px] text-ink-muted mt-1 font-medium">
-              <span>10</span>
-              <span>500</span>
+              <span>10 🪙</span>
+              <span>500 🪙</span>
             </div>
             <p className="text-[11px] text-ink-muted mt-2 leading-relaxed">
               📊 {sampleCount > 0
-                ? `参考：你最近 ${sampleCount} 次完成任务的奖励中位数 ${baseline} 金币`
-                : `还没完成过任务，默认基线 ${baseline} 金币`}
+                ? `参考：近 ${sampleCount} 道旨意悬赏中位数 ${baseline} 🪙`
+                : `尚无旨意完成记录，默认基线 ${baseline} 🪙`}
             </p>
           </div>
         </Card>
@@ -117,15 +118,15 @@ export default function TaskCreateOverlay() {
         <Card padding="md" tone="accent" className="border-brand-accent">
           <p className="text-sm font-bold text-brand-ink flex items-center gap-1.5">
             <span className="text-2xl">{icon}</span>
-            <span>{title || '任务名称'}</span>
+            <span>{title || '旨意名称'}</span>
             <span className="ml-auto inline-flex items-center gap-1">
-              <Coins size={14} /> {reward}
+              🪙 {reward}
             </span>
           </p>
         </Card>
 
         <Button type="submit" fullWidth size="lg" disabled={!title.trim() || reward <= 0}>
-          发布任务 🚀
+          颁旨 ✨
         </Button>
       </form>
     </motion.div>

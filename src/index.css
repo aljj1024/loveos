@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Quicksand:wght@500;600;700&display=swap');
 @import './styles/theme.css';
 
 @tailwind base;
@@ -72,6 +73,10 @@ body {
   color: var(--text-primary);
   font-family: 'MiSans', 'PingFang SC', 'HarmonyOS Sans SC', 'Source Han Sans CN', system-ui, -apple-system, sans-serif;
   transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.font-display {
+  font-family: var(--font-display);
 }
 
 #root {

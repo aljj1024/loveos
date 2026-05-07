@@ -240,7 +240,7 @@ function reducer(state: AppState, action: AppAction): AppState {
           : t,
       )
       const points = state.points + task.reward
-      const ledger = [makeLedgerEntry(task.reward, `完成任务：${task.title}`, 'task_reward', task.id), ...state.ledger]
+      const ledger = [makeLedgerEntry(task.reward, `缴差入帐：${task.title}`, 'task_reward', task.id), ...state.ledger]
       return { ...state, tasks, points, ledger }
     }
 
@@ -255,7 +255,7 @@ function reducer(state: AppState, action: AppAction): AppState {
       const item = state.storeItems.find(i => i.id === action.itemId)
       if (!item || state.points < item.cost) return state
       const points = state.points - item.cost
-      const ledger = [makeLedgerEntry(-item.cost, `兑换：${item.title}`, 'store_purchase', item.id), ...state.ledger]
+      const ledger = [makeLedgerEntry(-item.cost, `赎权：${item.title}`, 'store_purchase', item.id), ...state.ledger]
       const vouchers = [action.voucher, ...state.vouchers]
       return { ...state, points, ledger, vouchers }
     }
@@ -389,19 +389,19 @@ async function syncActionToSupabase(coupleId: string, myUserId: string, action: 
     case 'CREATE_TASK': {
       const task = newState.tasks.find(t => t.id === action.task.id)
       if (task) await upsertTask(coupleId, task)
-      pushPartner('📋 新任务发布', `「${task?.title ?? ''}」 悬赏 ${task?.reward ?? 0} 积分，快去接单！`, 'task')
+      pushPartner('📋 新旨意颁发', `「${task?.title ?? ''}」悬赏 ${task?.reward ?? 0} 🪙，快接旨听差`, 'task')
       break
     }
     case 'ACCEPT_TASK': {
       const task = newState.tasks.find(t => t.id === action.taskId)
       if (task) await upsertTask(coupleId, task)
-      pushPartner('✅ 任务被接单了', `「${task?.title ?? ''}」已被接单，等待完成！`, 'task')
+      pushPartner('✅ 旨意已被领', `「${task?.title ?? ''}」已被接领，待复命`, 'task')
       break
     }
     case 'COMPLETE_TASK': {
       const task = newState.tasks.find(t => t.id === action.taskId)
       if (task) await upsertTask(coupleId, task)
-      pushPartner('📤 任务待验收', `「${task?.title ?? ''}」已完成，需要你验收！`, 'task')
+      pushPartner('📤 旨意待阅', `「${task?.title ?? ''}」已复命，请陛下阅旨`, 'task')
       break
     }
     case 'CANCEL_TASK': {
@@ -415,14 +415,14 @@ async function syncActionToSupabase(coupleId: string, myUserId: string, action: 
       await upsertCoupleState(coupleId, newState)
       const entry = newState.ledger[0]
       if (entry) await insertLedgerEntry(coupleId, entry)
-      pushPartner('🎉 任务验收通过', `「${task?.title ?? ''}」验收通过，+${task?.reward ?? 0} 积分！`, 'task')
+      pushPartner('🎉 旨意阅毕', `「${task?.title ?? ''}」阅旨通过，+${task?.reward ?? 0} 🪙`, 'task')
       break
     }
 
     case 'SUBMIT_APPROVAL': {
       const approval = newState.approvals.find(a => a.id === action.approval.id)
       if (approval) await upsertApproval(coupleId, approval)
-      pushPartner('📜 新奏折待批阅', `「${approval?.title ?? ''}」请及时审批`, 'approval')
+      pushPartner('📜 新奏折待批阅', `「${approval?.title ?? ''}」请及时朱批`, 'approval')
       break
     }
     case 'RESOLVE_APPROVAL': {
@@ -440,7 +440,7 @@ async function syncActionToSupabase(coupleId: string, myUserId: string, action: 
     case 'CONDITIONAL_APPROVAL': {
       const approval = newState.approvals.find(a => a.id === action.id)
       if (approval) await upsertApproval(coupleId, approval)
-      pushPartner('📎 附条件通过', `「${approval?.title ?? ''}」条件：${action.conditionText}`, 'approval')
+      pushPartner('📎 准奏附条件', `「${approval?.title ?? ''}」附条：${action.conditionText}`, 'approval')
       break
     }
 
@@ -454,19 +454,19 @@ async function syncActionToSupabase(coupleId: string, myUserId: string, action: 
     case 'REDEEM_VOUCHER': {
       const voucher = newState.vouchers.find(v => v.id === action.voucherId)
       if (voucher) await upsertVoucher(coupleId, voucher)
-      pushPartner('✂️ 凭证核销申请', `对方申请核销「${voucher?.itemTitle ?? ''}」，需要你确认`, 'voucher')
+      pushPartner('✂️ 恩诏核销申请', `对方请核销「${voucher?.itemTitle ?? ''}」恩诏，请圣允`, 'voucher')
       break
     }
     case 'CONFIRM_VOUCHER': {
       const voucher = newState.vouchers.find(v => v.id === action.voucherId)
       if (voucher) await upsertVoucher(coupleId, voucher)
-      pushPartner('✅ 凭证核销确认', `「${voucher?.itemTitle ?? ''}」已被确认核销`, 'voucher')
+      pushPartner('✅ 恩诏核销已圣允', `「${voucher?.itemTitle ?? ''}」已圣允核销`, 'voucher')
       break
     }
     case 'REJECT_VOUCHER': {
       const voucher = newState.vouchers.find(v => v.id === action.voucherId)
       if (voucher) await upsertVoucher(coupleId, voucher)
-      pushPartner('❌ 凭证核销被拒绝', `「${voucher?.itemTitle ?? ''}」核销申请被拒绝`, 'voucher')
+      pushPartner('❌ 恩诏核销被驳', `「${voucher?.itemTitle ?? ''}」核销申请已被驳回`, 'voucher')
       break
     }
     case 'ADD_STORE_ITEM':

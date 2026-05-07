@@ -39,26 +39,26 @@ export default function ConditionalOverlay() {
       taskId,
     });
     close();
-    showToast('🧹 已附条件通过！任务已生成到任务广场');
+    showToast('📎 已朱批附旨——任务自入府库');
   }
 
   return (
     <Drawer open onClose={close} side="bottom">
       <div className="p-5">
-        <h2 className="font-bold text-lg text-ink-primary mb-3">🧹 附带条件通过</h2>
+        <h2 className="font-bold text-lg text-ink-primary mb-3">📎 准奏附条件</h2>
         <p className="text-sm text-ink-muted mb-3 font-medium">
-          审批通过，但需完成以下任务。任务会自动添加到「宝物 → 任务广场」：
+          准奏附条件——任务自入府库：
         </p>
 
         <div className="bg-brand-accent-soft p-4 rounded-button border-2 border-brand-accent mb-3">
           <p className="text-xs font-bold text-brand-ink mb-2">
-            📌 原申请：{approval.title}
+            📌 原奏：{approval.title}
           </p>
           <Textarea
             rows={2}
             value={condition}
             onChange={(e) => setCondition(e.target.value)}
-            placeholder="例如：洗碗三天、帮买奶茶、给我捏肩..."
+            placeholder="例如：洗碗三日、回程带奶茶、给娘娘捏肩..."
             autoFocus
             className="bg-bg-surface"
           />
@@ -73,7 +73,7 @@ export default function ConditionalOverlay() {
             onClick={handleConfirm}
             disabled={!condition.trim()}
           >
-            确认盖章 ✅
+            钤印颁旨 ✅
           </Button>
         </div>
       </div>

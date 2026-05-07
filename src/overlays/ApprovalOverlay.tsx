@@ -21,7 +21,7 @@ export default function ApprovalOverlay() {
   function handleApprove() {
     dispatch({ type: 'RESOLVE_APPROVAL', id: approval!.id, status: 'approved', pointsDeducted: 50 });
     dispatch({ type: 'CLOSE_OVERLAY' });
-    showToast('✅ 已通过！扣除 50 金币');
+    showToast('✅ 已准奏！扣除 50 🪙');
   }
 
   function handleConditional() {
@@ -35,7 +35,7 @@ export default function ApprovalOverlay() {
   function handleReject() {
     dispatch({ type: 'RESOLVE_APPROVAL', id: approval!.id, status: 'rejected' });
     dispatch({ type: 'CLOSE_OVERLAY' });
-    showToast('⚠️ 已驳回！');
+    showToast('⚠️ 已驳回');
   }
 
   const templateEmoji: Record<string, string> = {
@@ -49,9 +49,9 @@ export default function ApprovalOverlay() {
     string,
     { text: string; tone: 'success' | 'neutral' | 'warning' }
   > = {
-    approved: { text: '✅ 已通过', tone: 'success' },
+    approved: { text: '✅ 已准奏', tone: 'success' },
     rejected: { text: '❌ 已驳回', tone: 'neutral' },
-    conditional: { text: '📎 条件通过', tone: 'warning' },
+    conditional: { text: '📎 准奏附条件', tone: 'warning' },
   };
 
   return (
@@ -89,10 +89,10 @@ export default function ApprovalOverlay() {
             <ChevronLeft size={20} />
           </IconButton>
           <h1 className="text-2xl font-black text-white tracking-wide drop-shadow-sm">
-            申请详情
+            奏折详情
           </h1>
           <p className="text-white/85 text-xs mt-1 font-semibold">
-            {isApprover ? '请慎重审阅，盖章后不可撤回' : `等待 ${submitterProfile?.displayName ? '审批' : '老婆审批'}中...`}
+            {isApprover ? '请慎重朱批，落印后不可撤' : `恭候 ${submitterProfile?.displayName ? '朱批' : '娘娘朱批'}中...`}
           </p>
         </div>
 
@@ -117,10 +117,10 @@ export default function ApprovalOverlay() {
             </div>
 
             <div className="text-sm space-y-1.5 font-semibold text-ink-secondary">
-              <p>📝 事由：{approval.reason}</p>
+              <p>📝 启奏：{approval.reason}</p>
               {approval.datetime && (
                 <p>
-                  ⏰ 时间：
+                  ⏰ 时辰：
                   {new Date(approval.datetime).toLocaleString('zh-CN', {
                     month: 'numeric',
                     day: 'numeric',
@@ -132,7 +132,7 @@ export default function ApprovalOverlay() {
             </div>
 
             <div className="mt-3 bg-brand-accent-soft p-3 rounded-button border border-brand-accent">
-              <span className="text-brand-ink font-bold text-xs block mb-1">✨ TA 的诚意</span>
+              <span className="text-brand-ink font-bold text-xs block mb-1">✨ 臣下的诚意</span>
               <span className="font-semibold text-ink-primary text-sm">{approval.sincerity}</span>
             </div>
 
@@ -143,7 +143,7 @@ export default function ApprovalOverlay() {
                 </Badge>
                 {approval.conditionText && (
                   <p className="text-xs font-semibold text-state-warning">
-                    条件：{approval.conditionText}
+                    圣旨附条：{approval.conditionText}
                   </p>
                 )}
               </div>
@@ -158,7 +158,7 @@ export default function ApprovalOverlay() {
                 onClick={handleApprove}
                 className="col-span-2 bg-state-success text-white"
               >
-                <Heart size={18} fill="currentColor" /> 通过（扣 50 金币）
+                <Heart size={18} fill="currentColor" /> 准奏（扣 50 🪙）
               </Button>
               <Button
                 fullWidth
@@ -166,7 +166,7 @@ export default function ApprovalOverlay() {
                 onClick={handleConditional}
                 variant="accent"
               >
-                <Wrench size={16} /> 附条件通过
+                <Wrench size={16} /> 准奏附条
               </Button>
               <Button
                 fullWidth

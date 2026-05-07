@@ -27,7 +27,7 @@ export default function AuthScreen() {
       <div className="bg-gradient-to-br from-rose-400 to-pink-500 px-6 pt-14 pb-20 text-center">
         <div className="text-5xl mb-3">💑</div>
         <h1 className="text-3xl font-black text-white">LoveOS</h1>
-        <p className="text-rose-100 text-sm mt-2 font-medium">两个人的专属操作系统</p>
+        <p className="text-rose-100 text-sm mt-2 font-medium">两个人的小朝廷</p>
       </div>
 
       <div className="flex-1 px-6 -mt-10 relative z-10 flex flex-col justify-start">

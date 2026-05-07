@@ -39,14 +39,14 @@ export default function HomeTab() {
       className="flex-1 overflow-y-auto bg-bg-base pb-24"
     >
       <GlobalHeader
-        title="任务"
-        subtitle={isApprover ? '今天也是温柔的老婆 👑' : '今天也是努力搬砖的一天 ☀️'}
+        title="奏折"
+        subtitle={isApprover ? '陛下今日勤政 👑' : '老公今日跪安候批 ☀️'}
       />
 
       <div className="px-5 py-5">
         <h2 className="text-ink-primary font-bold mb-3 flex items-center gap-2 text-base">
           <span className="bg-brand-soft text-brand-ink p-1.5 rounded-button">✨</span>
-          {isApprover ? '审批中心' : '快速发起'}
+          {isApprover ? '今日朱批' : '快速上奏'}
         </h2>
 
         {isApprover ? (
@@ -66,7 +66,7 @@ export default function HomeTab() {
             <div className="w-12 h-12 bg-brand-soft rounded-pill flex items-center justify-center text-brand-ink">
               <ClipboardList size={22} />
             </div>
-            <span className="text-sm font-bold text-ink-primary">查看所有申请记录</span>
+            <span className="text-sm font-bold text-ink-primary">翻阅奏折档案</span>
           </Card>
         ) : (
           <div className="grid grid-cols-3 gap-3">
@@ -81,7 +81,7 @@ export default function HomeTab() {
               <div className="w-11 h-11 bg-brand-accent-soft rounded-pill flex items-center justify-center text-2xl">
                 🏀
               </div>
-              <span className="text-xs font-bold text-ink-primary">打球申请</span>
+              <span className="text-xs font-bold text-ink-primary">打球奏本</span>
             </motion.button>
             <motion.button
               onClick={() =>
@@ -94,7 +94,7 @@ export default function HomeTab() {
               <div className="w-11 h-11 bg-state-info/15 rounded-pill flex items-center justify-center text-state-info">
                 <ShoppingBag size={22} />
               </div>
-              <span className="text-xs font-bold text-ink-primary">购物报备</span>
+              <span className="text-xs font-bold text-ink-primary">采办报禀</span>
             </motion.button>
             <motion.button
               onClick={() =>
@@ -121,7 +121,7 @@ export default function HomeTab() {
             fullWidth
             className="mt-3 border-2 border-dashed border-brand/40"
           >
-            <PlusCircle size={16} /> 自定义申请
+            <PlusCircle size={16} /> 自拟奏本
           </Button>
         )}
       </div>
@@ -130,7 +130,7 @@ export default function HomeTab() {
         <div className="px-5 mb-2">
           <h2 className="text-ink-primary font-bold mb-3 flex items-center gap-2 text-base">
             <span className="bg-state-warning/15 text-state-warning p-1.5 rounded-button">✂️</span>
-            待核销确认
+            恩诏待核
           </h2>
           <div className="space-y-2">
             {pendingVoucherConfirms.map((v) => (
@@ -140,7 +140,7 @@ export default function HomeTab() {
                   <div>
                     <div className="font-bold text-sm text-ink-primary">{v.itemTitle}</div>
                     <div className="text-xs text-state-warning font-bold mt-0.5">
-                      对方申请核销此凭证
+                      对方申请核销此恩诏
                     </div>
                   </div>
                 </div>
@@ -150,7 +150,7 @@ export default function HomeTab() {
                     size="sm"
                     onClick={() => {
                       dispatch({ type: 'CONFIRM_VOUCHER', voucherId: v.id });
-                      showToast('✅ 已确认核销！');
+                      showToast('✅ 已准核销');
                     }}
                     className="bg-state-success text-white"
                   >
@@ -162,7 +162,7 @@ export default function HomeTab() {
                     variant="secondary"
                     onClick={() => {
                       dispatch({ type: 'REJECT_VOUCHER', voucherId: v.id });
-                      showToast('❌ 已拒绝核销');
+                      showToast('❌ 已驳核销');
                     }}
                   >
                     ❌ 拒绝
@@ -178,7 +178,7 @@ export default function HomeTab() {
         {isApprover ? (
           <>
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-ink-primary font-bold text-base">待我审批</h2>
+              <h2 className="text-ink-primary font-bold text-base">待朕朱批</h2>
               <button
                 onClick={() =>
                   dispatch({
@@ -189,7 +189,7 @@ export default function HomeTab() {
                 }
                 className="text-xs text-brand-ink font-bold flex items-center gap-1"
               >
-                历史记录 <ChevronRight size={14} />
+                翻阅档案 <ChevronRight size={14} />
               </button>
             </div>
 
@@ -197,8 +197,8 @@ export default function HomeTab() {
               <Card padding="lg" tone="surface">
                 <EmptyState
                   icon="🎉"
-                  title="暂无待审批的申请"
-                  description="老公今天表现不错"
+                  title="朝堂清净，无臣进言"
+                  description="老公今日勤勉"
                 />
               </Card>
             ) : (
@@ -245,7 +245,7 @@ export default function HomeTab() {
         ) : (
           <>
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-ink-primary font-bold text-base">我的申请进度</h2>
+              <h2 className="text-ink-primary font-bold text-base">朕的奏本进度</h2>
               <button
                 onClick={() =>
                   dispatch({
@@ -264,8 +264,8 @@ export default function HomeTab() {
               <Card padding="lg" tone="surface">
                 <EmptyState
                   icon="📭"
-                  title="还没有提交过申请"
-                  description="用上方按钮提交一个吧"
+                  title="尚无奏本"
+                  description="用上方按钮递一道吧"
                 />
               </Card>
             ) : (
@@ -292,7 +292,7 @@ export default function HomeTab() {
                         </div>
                         {app.conditionText && (
                           <div className="text-xs text-state-warning font-bold mt-1">
-                            📎 条件：{app.conditionText}
+                            📎 圣旨附条件：{app.conditionText}
                           </div>
                         )}
                       </div>

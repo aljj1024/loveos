@@ -24,7 +24,7 @@ export default function WikiEditOverlay() {
   function handleSave() {
     dispatch({ type: 'UPDATE_PROFILE_FIELD', profileId, key: fieldKey, value });
     close();
-    showToast('✅ 档案已更新！');
+    showToast('✅ 档案已更新');
   }
 
   return (

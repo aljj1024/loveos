@@ -20,9 +20,9 @@ export default function StatsOverlay() {
     string,
     { label: string; tone: 'success' | 'neutral' | 'warning' }
   > = {
-    approved: { label: '✅ 已通过', tone: 'success' },
+    approved: { label: '✅ 已准奏', tone: 'success' },
     rejected: { label: '❌ 已驳回', tone: 'neutral' },
-    conditional: { label: '🧹 条件通过', tone: 'warning' },
+    conditional: { label: '📎 准奏附条件', tone: 'warning' },
   };
 
   return (
@@ -43,7 +43,7 @@ export default function StatsOverlay() {
           <ChevronLeft size={20} />
         </IconButton>
         <h1 className="text-lg font-bold text-ink-primary">
-          {mode === 'history' ? '历史申请记录' : '金币统计'}
+          {mode === 'history' ? '奏折档案' : '内帑起居注'}
         </h1>
       </div>
 
@@ -53,23 +53,23 @@ export default function StatsOverlay() {
             <div className="grid grid-cols-3 gap-2.5">
               <Card padding="md" tone="surface" className="text-center">
                 <div className="font-black text-2xl text-state-success">+{totalEarned}</div>
-                <div className="text-xs text-ink-muted font-bold mt-1">总收入</div>
+                <div className="text-xs text-ink-muted font-bold mt-1">总入帐</div>
               </Card>
               <Card padding="md" tone="surface" className="text-center">
                 <div className="font-black text-2xl text-state-danger">-{totalSpent}</div>
-                <div className="text-xs text-ink-muted font-bold mt-1">总支出</div>
+                <div className="text-xs text-ink-muted font-bold mt-1">总耗去</div>
               </Card>
               <Card ornate padding="md" tone="surface" className="text-center">
                 <div className="font-black text-2xl text-brand-ink">{points}</div>
-                <div className="text-xs text-ink-muted font-bold mt-1">当前余额</div>
+                <div className="text-xs text-ink-muted font-bold mt-1">当前内帑</div>
               </Card>
             </div>
 
             <div>
-              <h3 className="font-bold text-ink-primary mb-2">最近流水</h3>
+              <h3 className="font-bold text-ink-primary mb-2">近期流水</h3>
               {ledger.length === 0 ? (
                 <Card padding="lg" tone="surface">
-                  <EmptyState icon="📭" title="还没有金币流水" />
+                  <EmptyState icon="📭" title="尚无铜钱进出" />
                 </Card>
               ) : (
                 <div className="space-y-2">
@@ -113,7 +113,7 @@ export default function StatsOverlay() {
           <div>
             {approvalHistory.length === 0 ? (
               <Card padding="lg" tone="surface">
-                <EmptyState icon="📭" title="还没有处理过的申请" />
+                <EmptyState icon="📭" title="尚无朱批记录" />
               </Card>
             ) : (
               <div className="space-y-2.5">
@@ -128,7 +128,7 @@ export default function StatsOverlay() {
                       <div className="text-xs text-ink-muted font-medium">{a.reason}</div>
                       {a.conditionText && (
                         <div className="mt-2 text-xs text-state-warning bg-state-warning/15 rounded-button px-3 py-1.5 font-bold">
-                          条件：{a.conditionText}
+                          圣旨附条：{a.conditionText}
                         </div>
                       )}
                       <div className="text-[11px] text-ink-muted mt-2">
